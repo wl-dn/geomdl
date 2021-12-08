@@ -21,7 +21,6 @@ export default new Vuex.Store({
       rotateX: 0, // 绕X轴旋转
       rotateY: 0, // 绕Y轴旋转
       rotateZ: 0, // 绕Z轴旋转
-      alpha: 1, // 透明度
     },
   },
   getters: {

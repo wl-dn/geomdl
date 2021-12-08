@@ -74,6 +74,7 @@
       @sendCloseLayerDialog="isLayerDialogVisible = false"
     ></holeLayerInfo>
 
+    <!-- 虚拟钻孔 -->
     <virtualBox
       :virtualLayerInfo="virtualLayerInfo"
       :fieldsList="fieldsList"
@@ -82,6 +83,7 @@
       @sendCloseVirtualDialog="isvirtualLayerDialogVisible = false"
     ></virtualBox>
 
+    <!-- 通用盒子显示信息 -->
     <commonTableBox
       :tableData="tableCommonData"
       :isCommonVisible="isCommonVisible"
@@ -97,6 +99,9 @@
       @sendResetInfoEvent="receptResetInfoEvent"
       @sendLayerItemFromSearchCompent="receptLayerItemFromSearchCompent"
     ></searchBar>
+
+    <!-- 底部信息状态栏 -->
+    <bottomTool @sendAlphaInfo="receptAlphaInfo"></bottomTool>
   </div>
 </template>
 
@@ -112,6 +117,7 @@ import holeLayerInfo from "../../components/toolComponents/holeLayerInfo.vue";
 import virtualBox from "../../components/toolComponents/virtualHoleInfo.vue";
 import searchBar from "../../components/toolComponents/searchCompent/searchComopent.vue";
 import commonTableBox from "../../components/toolComponents/commonTableInfo.vue";
+import bottomTool from "../../components/cesiumComponents/bottomTool.vue";
 
 import { CesiumUtils } from "../../utils/utils.js";
 import { DrawPolygon } from "../../utils/drawUtils";
@@ -120,6 +126,8 @@ import TerrainClipPlan from "../../utils/TerrainClipPlan";
 import * as VirtualHoleService from "../../../public/proto/dummy_hole_service_grpc_web_pb";
 
 import { Notification } from "element-ui";
+import eventVue from "../../assets/js/eventVue";
+
 import PathGraphics from "cesium/Source/DataSources/PathGraphics";
 
 let tileSetList = [];
@@ -227,6 +235,7 @@ export default {
     searchBar,
     virtualBox,
     commonTableBox,
+    bottomTool,
   },
   computed: {
     mdlParmsChange() {
@@ -290,7 +299,7 @@ export default {
     initCesium() {
       // 初始化地球
       const showWedgit = false;
-      let tdtUrl = "https://t{s}.tianditu.gov.cn/";
+      // let tdtUrl = "https://t{s}.tianditu.gov.cn/";
       const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
       let tdurl =
         "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
@@ -376,6 +385,7 @@ export default {
           // 定位完成之后的回调函数
         },
       });
+      eventVue.$emit("sendCesiumViewer", viewer);
     },
 
     // 加载地形服务
@@ -1079,36 +1089,36 @@ export default {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //注册移动事件
-        //Color a feature yellow on hover.
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
-          // 移动变小手
-          const moveFeature = viewer.scene.pick(movement.endPosition);
-          if (Cesium.defined(moveFeature)) {
-            viewer._container.style.cursor = "pointer";
-          } else {
-            viewer._container.style.cursor = "default";
-          }
-          return;
-          // If a feature was previously highlighted, undo the highlight
-          if (Cesium.defined(moveHighlighted.feature)) {
-            moveHighlighted.feature.color = moveHighlighted.originalColor;
-            moveHighlighted.feature = undefined;
-          }
+        // viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        //   // 移动变小手
+        //   const moveFeature = viewer.scene.pick(movement.endPosition);
+        //   if (Cesium.defined(moveFeature)) {
+        //     viewer._container.style.cursor = "pointer";
+        //   } else {
+        //     viewer._container.style.cursor = "default";
+        //   }
+        //   return;
+        //   // If a feature was previously highlighted, undo the highlight
+        //   if (Cesium.defined(moveHighlighted.feature)) {
+        //     moveHighlighted.feature.color = moveHighlighted.originalColor;
+        //     moveHighlighted.feature = undefined;
+        //   }
 
-          // Pick a new feature
-          let pickedFeature = viewer.scene.pick(movement.endPosition);
-          if (!Cesium.defined(pickedFeature)) {
-            return;
-          }
+        //   // Pick a new feature
+        //   let pickedFeature = viewer.scene.pick(movement.endPosition);
+        //   if (!Cesium.defined(pickedFeature)) {
+        //     return;
+        //   }
 
-          // Highlight the feature
-          moveHighlighted.feature = pickedFeature;
-          Cesium.Color.clone(
-            pickedFeature.color,
-            moveHighlighted.originalColor
-          );
-          pickedFeature.color = Cesium.Color.YELLOW;
-        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        //   // Highlight the feature
+        //   moveHighlighted.feature = pickedFeature;
+        //   Cesium.Color.clone(
+        //     pickedFeature.color,
+        //     moveHighlighted.originalColor
+        //   );
+        //   pickedFeature.color = Cesium.Color.YELLOW;
+        // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        
         // 注册双击事件（注意区分单击和双击事件）
         viewer.screenSpaceEventHandler.setInputAction((movement) => {
           clearTimeout(this.flagTimer);
@@ -1365,6 +1375,10 @@ export default {
       } else if (data.label === "虚拟钻孔") {
         this.activeDoubleEvent = true;
       }
+    },
+    receptAlphaInfo(alpha) {
+      viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
+        Cesium.Math.clamp(alpha, 0.0, 1.0);
     },
     async receptSearchInfo(item) {
       // 是否加载钻孔并显示

@@ -68,7 +68,7 @@ export default {
 <style scoped>
 .CesiumTool_box {
   position: absolute;
-  bottom: -40px;
+  bottom: -20px;
   color: white;
   height: 100px;
   z-index: 1;
