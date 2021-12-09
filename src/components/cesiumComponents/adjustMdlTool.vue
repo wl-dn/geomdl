@@ -10,7 +10,10 @@
   <div class="adjustMdlBox">
     <div>
       <span>线框/实体</span>
-      <el-checkbox v-model="isWireframevCheck" @change="WireOnChange"></el-checkbox>
+      <el-checkbox
+        v-model="isWireframevCheck"
+        @change="WireOnChange"
+      ></el-checkbox>
     </div>
     <div>
       <span>比例(Z)</span>
@@ -68,22 +71,12 @@
         :max="180"
       ></el-slider>
     </div>
-
-    <div>
-      <span>透明度</span>
-      <el-slider
-        v-model="tileModelTool.alpha"
-        :min="0.5"
-        :max="1"
-        :step="0.05"
-      ></el-slider>
-    </div>
   </div>
 </template>
 
 <script>
 export default {
-  props:["isWireframevCheck"],
+  props: ["isWireframevCheck"],
   data() {
     return {};
   },
@@ -97,7 +90,7 @@ export default {
   },
   methods: {
     WireOnChange(val) {
-      this.$emit("sendWifeinfo",val)
+      this.$emit("sendWifeinfo", val);
     },
     onMessageFromComponent() {},
     destroyComponent() {},
