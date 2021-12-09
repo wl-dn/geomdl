@@ -319,35 +319,35 @@ export default {
           id: "6",
           label: "地形影像",
           children: [
-            {
-              id: "6-1",
-              label: "天地图影像",
-              name: "TDMap",
-              url:
-                "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
-                this.tiandituTk,
-              layers: "tdtImgLayer",
-              serviceType: "天地图",
-            },
-            {
-              id: "6-2",
-              label: "天地图注记",
-              url:
-                "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
-                this.tiandituTk,
-              name: "TDMark",
-              layers: "tdtCiaLayer",
-              serviceType: "天地图",
-            },
-            {
-              id: "6-3",
-              label: "谷歌影像",
-              url:
-                "http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}",
-              name: "GoogleUTMap",
-              layers: "imgTypeGoogle",
-              serviceType: "谷歌影像",
-            },
+            // {
+            //   id: "6-1",
+            //   label: "天地图影像",
+            //   name: "TDMap",
+            //   url:
+            //     "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
+            //     this.tiandituTk,
+            //   layers: "tdtImgLayer",
+            //   serviceType: "天地图",
+            // },
+            // {
+            //   id: "6-2",
+            //   label: "天地图注记",
+            //   url:
+            //     "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
+            //     this.tiandituTk,
+            //   name: "TDMark",
+            //   layers: "tdtCiaLayer",
+            //   serviceType: "天地图",
+            // },
+            // {
+            //   id: "6-3",
+            //   label: "谷歌影像",
+            //   url:
+            //     "http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}",
+            //   name: "GoogleUTMap",
+            //   layers: "imgTypeGoogle",
+            //   serviceType: "Google",
+            // },
             {
               id: "6-4",
               label: "ESRI影像",

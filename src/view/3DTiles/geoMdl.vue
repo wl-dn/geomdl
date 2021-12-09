@@ -223,6 +223,9 @@ export default {
 
       // 地层厚度
       layerThickness: [4.3, 7.2, 3.4, 5.8, 10.0, 3.9, 3.7, 4.5],
+
+      //钻孔聚类监听对象
+      removeListener:undefined,
     };
   },
   components: {
@@ -317,7 +320,7 @@ export default {
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
 
-        // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
+        terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
 
         // imageryProvider: new Cesium.SingleTileImageryProvider({
@@ -374,22 +377,12 @@ export default {
         new Cesium.NearFarScalar(1000.0, 1, 1000000.0, 1);
 
       // 将三维球定位到中国
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(103.84, 31.15, 17850000),
-        orientation: {
-          heading: Cesium.Math.toRadians(348.4202942851978),
-          pitch: Cesium.Math.toRadians(-89.74026687972041),
-          roll: Cesium.Math.toRadians(0),
-        },
-        complete: function callback() {
-          // 定位完成之后的回调函数
-        },
-      });
+      this.flytochina();
       eventVue.$emit("sendCesiumViewer", viewer);
     },
 
     // 加载地形服务
-    loadWmsLayer(url, layers, isChecked) {
+    async loadWmsLayer(url, layers, isChecked) {
       // 判断图层是否存在
       let obj = this.layerIsExist_2(layers);
       if (obj.flag) {
@@ -408,7 +401,19 @@ export default {
           },
         });
         wmsImageLayer.name = layers;
-        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+        let aa = await wmsImageLayer.readyPromise;
+        console.log("定位");
+        if (imageryLayers) {
+          let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
+          // console.log(imgLayer.rectangle);
+          // viewer.flyTo(imgLayer);
+          imgLayer.getViewableRectangle().then(function (rectangle) {
+            console.log(rectangle);
+              return camera.flyTo({
+                  destination: rectangle
+              });
+          });
+        }
       }
     },
     // 加载ArcGIS服务
@@ -451,7 +456,9 @@ export default {
         let wmsImageLayer = new Cesium.UrlTemplateImageryProvider({
           url: url,
           layers: layers,
-          credit:"",
+          tilingScheme:new Cesium.WebMercatorTilingScheme(),            	
+          minimumLevel:1,            
+          maximumLevel:20
         });
         wmsImageLayer.name = layers;
         if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
@@ -506,7 +513,8 @@ export default {
       let flagObj = this.kmlSourceIsExist(name);
       console.log(flagObj);
       if (flagObj.flag) {
-        flagObj.dataSource.show = isChecked;
+        // flagObj.dataSource.show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
         return;
       }
       this.$http.get(url).then(async (res) => {
@@ -536,18 +544,21 @@ export default {
       // 判断图层是否存在
       let obj = this.layerIsExist(url);
       if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
+        // imageryLayers._layers[obj.index].show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
       } else {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
         });
+        viewer.zoomTo(acrgisImagelayer);
         if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
       }
     },
     loadTDMapLayer(url, layers, isChecked) {
       let obj = this.layerIsExist(url);
       if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
+        // imageryLayers._layers[obj.index].show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
         return;
       }
       const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
@@ -780,6 +791,76 @@ export default {
       // };
     },
 
+    async addHolePoiClusterLayer(url, name, isChecked){
+      let pointEntities = [];
+      let holeResult = await this.$http.get(url);
+      for (let i = 0; i < holeResult.data.data.length; i++) {
+        let lng = Number(holeResult.data.data[i].borelon);
+        let lat = Number(holeResult.data.data[i].borelat);
+        let height = Number(holeResult.data.data[i].boreheight);
+        let label = holeResult.data.data[i].borename;
+        let entity = new Cesium.Entity({
+            id: "marker" + i,
+            position : Cesium.Cartesian3.fromDegrees(lng, lat),
+            billboard :{
+                image: require("../../assets/images/hole.png"),
+                width: 32,  // 宽高必须设置，否则首次无法聚合
+                height: 38,
+                heightReference:Cesium.HeightReference.CLAMP_TO_GROUND,
+                horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+                verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                id:label
+            }
+        })
+        viewer.flyTo(entity);
+        pointEntities.push(entity);
+      }
+
+
+      let dataSourceMap= new Map();
+      let dataSource = new Cesium.CustomDataSource("holeCluster");
+      viewer.dataSources.add(dataSource);
+      for(var i = 0;i < pointEntities.length;i++ ) {
+          dataSource.entities.add(pointEntities[i])
+      }
+  
+      let pixelRange = 25;
+      let minimumClusterSize = 5;
+      let enabled = true;
+      dataSource.clustering.enabled = enabled;
+      dataSource.clustering.pixelRange = pixelRange;
+      dataSource.clustering.minimumClusterSize = minimumClusterSize;
+      var removeListener;
+    },
+
+    setClusterEvent( geoJsonDatasource) {
+      // if (Cesium.defined(removeListener)) {
+      //       removeListener();
+      //       this.removeListener = undefined;
+      //       return;
+      // } 
+      this.removeListener = geoJsonDataSource.clustering.clusterEvent.addEventListener(
+        function(clusteredEntities, cluster) {
+          cluster.billboard.show = true ;
+          cluster.label.show = false;
+          cluster.billboard.id = cluster.label.id;
+          cluster.billboard.verticalorigin =Cesium.Verticalorigin.BOTTOM;
+          if (clusteredEntities.length >= 300) {
+            cluster.billboard.image = "static/ images/cluser/300+.png" ;
+          } else if (clusteredEntities.length >= 150) {
+            cluster.billboard. image = "static/ images/cluser/150+.png" ;
+          } else if (clusteredEntities.length >= 90) {
+            cluster.billboard.image ="static/ images/cluser/90+.png" ;
+          } else if (clusteredEntities.length >= 30) {
+            cluster.billboard.mage = "static/ images/cluser/30+.png" ;
+          } else if (clusteredEntities.length > 10) {
+            cluster.billboard. image = "static/ images/cluser/10+.png" ;
+          } else {
+            cluster.billboard.image = "static/ images/cluser/" + clusteredEntities .length + ".png" ;
+          }
+        });
+    },
+
     // 判断三维模型是否存在
     judgeIs3DTiles(mdlUrl) {
       const tilePrimitives = viewer.scene.primitives._primitives;
@@ -929,15 +1010,19 @@ export default {
 
     //复位
     onClickReset() {
-      if (tileSetList.length === 0) return;
-      viewer.flyTo(tileSetList[0].tileSet, {
-        duration: 1,
-        offset: new Cesium.HeadingPitchRange(
-          0.0,
-          -0.5,
-          tileSetList[0].tileSet.boundingSphere.radius * 4.0
-        ),
-      });
+      if (tileSetList.length === 0) 
+      {
+        this.flytochina();
+      }else{
+        viewer.flyTo(tileSetList[0].tileSet, {
+          duration: 1,
+          offset: new Cesium.HeadingPitchRange(
+            0.0,
+            -0.5,
+            tileSetList[0].tileSet.boundingSphere.radius * 4.0
+          ),
+        });
+      }
     },
     onClickUnder() {},
 
@@ -1423,6 +1508,7 @@ export default {
           }
           break;
         case 3:
+          console.log("复位");
           if (viewer) {
             this.onClickReset();
           }
@@ -1430,6 +1516,26 @@ export default {
         default:
           break;
       }
+    },
+    /**
+     *  初始定位中国
+     * */
+    flytochina() {
+        // viewer.camera.flyTo({
+        //     destination: Cesium.Cartesian3.fromDegrees(116.435314, 40.960521, 10000000.0),
+        //     duration: 8
+        // });
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(110.435314, 40.960521, 8000000.0),
+          orientation: {
+            heading: Cesium.Math.toRadians(20),  //代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
+            pitch: Cesium.Math.toRadians(-95),   //代表镜头上下方向,正值为上,负值为下.
+            roll: Cesium.Math.toRadians(-20),                    //代表镜头左右倾斜.正值,向右倾斜,负值向左倾斜
+          },
+          complete: function callback() {
+            // 定位完成之后的回调函数
+          },
+        });
     },
     receptWifeinfo(val) {
       for (let i = 0; i < tileSetList.length; i++) {
