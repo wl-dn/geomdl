@@ -339,6 +339,42 @@ export default {
               layers: "tdtCiaLayer",
               serviceType: "天地图",
             },
+            {
+              id: "6-3",
+              label: "谷歌影像",
+              url:
+                "http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}",
+              name: "GoogleUTMap",
+              layers: "imgTypeGoogle",
+              serviceType: "谷歌影像",
+            },
+            {
+              id: "6-4",
+              label: "ESRI影像",
+              url:
+                "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+              name: "ESRIMap",
+              layers: "imgTypeESRIMap",
+              serviceType: "ESRI",
+            },
+            {
+              id: "6-5",
+              label: "ESRI街道图",
+              url:
+                "http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer",
+              name: "ESRIMapCOC",
+              layers: "vecTypeESRICOC",
+              serviceType: "ESRI",
+            },
+            {
+              id: "6-6",
+              label: "OSM",
+              url:
+                "https://a.tile.openstreetmap.org/",
+              name: "OSMMap",
+              layers: "vecTypeOSM",
+              serviceType: "OSM",
+            },
           ],
         },
         {

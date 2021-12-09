@@ -411,6 +411,52 @@ export default {
         if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
       }
     },
+    // 加载ArcGIS服务
+    loadESRILayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
+          url: url,
+          layers: layers
+        });
+        wmsImageLayer.name = layers;
+        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+      }
+    },
+    // 加载OSM服务
+    loadOSMLayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.OpenStreetMapImageryProvider({
+          url: url,
+          layers: layers
+        });
+        wmsImageLayer.name = layers;
+        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+      }
+    },
+    // 加载UTImage服务
+    loadUTLayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.UrlTemplateImageryProvider({
+          url: url,
+          layers: layers,
+          credit:"",
+        });
+        wmsImageLayer.name = layers;
+        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+      }
+    },
     // 加载筛选后的地形服务（零时的）
     loadSelectWmsLayer(wmsUrl, layer, label, cqlStr, isChecked) {
       let obj = this.layerIsExist_2("temp" + layer + label);
@@ -537,6 +583,7 @@ export default {
       });
     },
     selectOnMdlchange(val) {
+      console.log("加载模型");
       this.mdlName = val;
       let tempParams = JSON.parse(
         JSON.stringify(this.$store.getters.getTileMdlTool)
@@ -698,7 +745,7 @@ export default {
         let lat = Number(holeResult.data.data[i].borelat);
         let height = Number(holeResult.data.data[i].boreheight);
         let label = holeResult.data.data[i].borename;
-        const position = Cesium.Cartesian3.fromDegrees(lon, lat , 10);
+        const position = Cesium.Cartesian3.fromDegrees(lon, lat , height);
         this.addHolePrimitive(billboards, position, label);
       }
     },
@@ -715,16 +762,19 @@ export default {
         // image: this.drawCanvas(image, label, 10), // 绘制带注记的编号
         show: true,
 
-        pixelOffset: new Cesium.Cartesian2(0, -50), // default: (0, 0)
+        pixelOffset: new Cesium.Cartesian2(0, 0), // default: (0, 0)
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER, // default
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // default: CENTER
-        scale: 2.0, // default: 1.0
+        // scale: 2.0, // default: 1.0
         color: Cesium.Color.LIME, // default: WHITE
         // rotation: Cesium.Math.PI_OVER_FOUR, // default: 0.0
         alignedAxis: Cesium.Cartesian3.ZERO, // default
         // width: 10, // default: undefined
         // height: 10, // default: undefined
+        // Example 1.
+        scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2, 8.0e6, 0.5),
+        //heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         id: label,
       });
       // };
@@ -1299,7 +1349,25 @@ export default {
           data.nodeData.layers,
           data.isChecked
         );
-      } else if (data.nodeData.serviceType === "wfs") {
+      } else if (data.nodeData.serviceType === "Google") {
+        this.loadUTLayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
+      }else if (data.nodeData.serviceType === "ESRI") {
+        this.loadESRILayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
+      }else if (data.nodeData.serviceType === "OSM") {
+        this.loadOSMLayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
+      }else if (data.nodeData.serviceType === "wfs") {
         this.loadWfsLayer(
           data.nodeData.url,
           data.nodeData.name,

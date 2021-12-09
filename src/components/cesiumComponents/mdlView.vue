@@ -60,6 +60,13 @@ export default {
               serviceType: "3DTiles",
             },
             {
+              id: "1-21",
+              label: "三维钻孔模型-分级",
+              name: "holemdl",
+              url: "3DTiles/holeMdlLod/tileset.json",
+              serviceType: "3DTiles",
+            },
+            {
               id: "1-3",
               label: "sec-1",
               name: "sec1mdl",
