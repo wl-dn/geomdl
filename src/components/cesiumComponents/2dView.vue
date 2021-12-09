@@ -344,7 +344,8 @@ export default {
         {
           id: "7",
           label: "钻孔",
-          url: "/getAllHoleInfo",
+          // url: "/getAllHoleInfo",
+          url: "holeinfo.json",
           name: "holeLayer",
           layer: "",
           serviceType: "billboards",

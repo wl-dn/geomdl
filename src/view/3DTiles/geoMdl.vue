@@ -680,13 +680,15 @@ export default {
       let billboards = viewer.scene.primitives.add(
         new Cesium.BillboardCollection()
       );
+      console.log("billboards函数");
       billboards.name = name;
       let holeResult = await this.$http.get(url);
       for (let i = 0; i < holeResult.data.data.length; i++) {
         let lon = Number(holeResult.data.data[i].borelon);
         let lat = Number(holeResult.data.data[i].borelat);
+        let height = Number(holeResult.data.data[i].boreheight);
         let label = holeResult.data.data[i].borename;
-        const position = Cesium.Cartesian3.fromDegrees(lon, lat);
+        const position = Cesium.Cartesian3.fromDegrees(lon, lat , 10);
         this.addHolePrimitive(billboards, position, label);
       }
     },
@@ -1308,6 +1310,7 @@ export default {
           data.isChecked
         );
       } else if (data.nodeData.serviceType === "billboards") {
+        console.log("加载billboards");
         this.loadHoleLayer(
           data.nodeData.url,
           data.nodeData.name,
