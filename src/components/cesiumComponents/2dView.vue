@@ -329,16 +329,16 @@ export default {
             //   layers: "tdtImgLayer",
             //   serviceType: "天地图",
             // },
-            // {
-            //   id: "6-2",
-            //   label: "天地图注记",
-            //   url:
-            //     "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
-            //     this.tiandituTk,
-            //   name: "TDMark",
-            //   layers: "tdtCiaLayer",
-            //   serviceType: "天地图",
-            // },
+            {
+              id: "6-2",
+              label: "天地图注记",
+              url:
+                "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
+                this.tiandituTk,
+              name: "TDMark",
+              layers: "tdtCiaLayer",
+              serviceType: "天地图",
+            },
             // {
             //   id: "6-3",
             //   label: "谷歌影像",
@@ -348,15 +348,15 @@ export default {
             //   layers: "imgTypeGoogle",
             //   serviceType: "Google",
             // },
-            {
-              id: "6-4",
-              label: "ESRI影像",
-              url:
-                "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
-              name: "ESRIMap",
-              layers: "imgTypeESRIMap",
-              serviceType: "ESRI",
-            },
+            // {
+            //   id: "6-4",
+            //   label: "ESRI影像",
+            //   url:
+            //     "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+            //   name: "ESRIMap",
+            //   layers: "imgTypeESRIMap",
+            //   serviceType: "ESRI",
+            // },
             {
               id: "6-5",
               label: "ESRI街道图",
