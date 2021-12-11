@@ -101,7 +101,7 @@
     ></searchBar>
 
     <!-- 底部信息状态栏 -->
-    <bottomTool @sendAlphaInfo="receptAlphaInfo"></bottomTool>
+    <bottomTool @sendAlphaInfo="receptAlphaInfo" @sendImageryAlpha="receptImageryAlpha"></bottomTool>
   </div>
 </template>
 
@@ -311,6 +311,7 @@ export default {
           url: "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
           layers: "imgTypeESRIMap"
         });
+        wmsImageLayer.name = "imgTypeESRIMap";
       viewer = new Cesium.Viewer("cesiumContainer", {
         geocoder: showWedgit, // 地理位置查询定位控件
         homeButton: showWedgit, // 默认相机位置控件
@@ -324,7 +325,7 @@ export default {
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
 
-        terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
+        // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
 
         // imageryProvider: new Cesium.SingleTileImageryProvider({
@@ -353,7 +354,10 @@ export default {
       viewer.scene.skyBox.show = false;
       viewer.scene.sun.show = false;
       viewer.scene.moon.show = false;
-      viewer.scene.backgroundColor = Cesium.Color.BLACK;
+      viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
+      // viewer.scene.globe.show = false; //不显示地球，这条和地球透明度选一个就可以
+      viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+      viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
       // 加载三维地形
       // let terrainProvider = new Cesium.CesiumTerrainProvider({
       //   url: "http://192.10.3.237:81/tsyTerrain/",
@@ -383,7 +387,6 @@ export default {
 
       // 将三维球定位到中国
       this.flytochina();
-      eventVue.$emit("sendCesiumViewer", viewer);
     },
 
     // 加载地形服务
@@ -550,7 +553,7 @@ export default {
       let obj = this.layerIsExist(url);
       if (obj.flag) {
         // imageryLayers._layers[obj.index].show = isChecked;
-        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
+        imageryLayers.remove(imageryLayers._layers[obj.index]);
       } else {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
@@ -563,7 +566,7 @@ export default {
       let obj = this.layerIsExist(url);
       if (obj.flag) {
         // imageryLayers._layers[obj.index].show = isChecked;
-        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
+        imageryLayers.remove(imageryLayers._layers[obj.index]);
         return;
       }
       const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
@@ -576,6 +579,7 @@ export default {
         tileMatrixSetID: "GoogleMapsCompatible",
         show: true,
       });
+      wmtsImageLayer.name = layers;
       imageryLayers.addImageryProvider(wmtsImageLayer);
     },
     // 加载kml文件
@@ -626,7 +630,9 @@ export default {
       // 加载3Dtiles文件
       let tileSet = new Cesium.Cesium3DTileset({
         url: url,
-        // url: Cesium.IonResource.fromAssetId(8564),
+        //控制切片视角显示的数量，可调整性能
+		    maximumScreenSpaceError: 2,
+        maximumNumberOfLoadedTiles: 50,
       });
       const tileset = await tileSet.readyPromise;
       tileset.name = name;
@@ -696,14 +702,32 @@ export default {
       viewer.scene.globe.show = false;
       // 定位到该模型
       if (name === "holemdl") {
-        viewer.zoomTo(
-          tileSet,
-          new Cesium.HeadingPitchRange(
-            0.0,
-            -0.5,
-            tileSet.boundingSphere.radius * 0.05
-          )
-        );
+        console.log("钻孔模型定位",mdlCenterParams);
+        // viewer.zoomTo(
+        //   tileSet,
+        //   new Cesium.HeadingPitchRange(
+        //     0.0,
+        //     -0.5,
+        //     tileSet.boundingSphere.radius * 0.05
+        //   )
+        // );
+        //heading:向左（360-），向右（1+） ; pitch：正上负下
+
+          let initialPosition = Cesium.Cartesian3.fromDegrees(
+            mdlCenterParams[1]+0.00001,
+            mdlCenterParams[2],
+            mdlCenterParams[0]-400
+          );
+          let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+            357.27879878293835,
+            -21.34390550872461,
+            0.0716951918898415
+          );
+          viewer.scene.camera.setView({
+            destination: initialPosition,
+            orientation: initialOrientation,
+            endTransform: Cesium.Matrix4.IDENTITY,
+          });
       } else {
         viewer.zoomTo(
           tileSet,
@@ -766,13 +790,29 @@ export default {
         let label = holeResult.data.data[i].borename;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat , 0);
         if(i === 1){
-            viewer.camera.flyTo({   //无法定位到primitivesCollection，折中定位到第一个钻孔点
-              destination: Cesium.Cartesian3.fromDegrees(lon, lat, 100000.0),
+            // viewer.camera.flyTo({   //无法定位到primitivesCollection，折中定位到第一个钻孔点
+              // destination: Cesium.Cartesian3.fromDegrees(lon, lat, 100000.0),
               // orientation: {
               //   heading: Cesium.Math.toRadians(40.0),
               //   pitch: Cesium.Math.toRadians(-35.0),
               //   roll: 0.0,
               // },
+            // });
+        // }
+            let initialPosition = Cesium.Cartesian3.fromDegrees(
+              Number(holeResult.data.data[parseInt(holeResult.data.data.length/2)].borelon),
+              Number(holeResult.data.data[parseInt(holeResult.data.data.length/2)].borelat),
+              Number(holeResult.data.data[parseInt(holeResult.data.data.length/2)].boreheight)+2000
+            );
+            let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+              -11.27879878293835,
+              -20.34390550872461,
+              0.0716951918898415
+            );
+            viewer.scene.camera.setView({
+              destination: initialPosition,
+              orientation: initialOrientation,
+              endTransform: Cesium.Matrix4.IDENTITY,
             });
         }
         this.addHolePrimitive(billboards, position, label);
@@ -1143,99 +1183,101 @@ export default {
     // 注册cesium事件
     registerOnclickEvent() {
       if (viewer) {
-        // 注册右键事件
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
-          // If a feature was previously highlighted, undo the highlight
-          if (Cesium.defined(rightClickHighted.feature)) {
-            rightClickHighted.feature.color = rightClickHighted.originalColor;
-            rightClickHighted.feature = undefined;
-          }
+        // // 注册右键事件
+        // viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        //   // If a feature was previously highlighted, undo the highlight
+        //   if (Cesium.defined(rightClickHighted.feature)) {
+        //     rightClickHighted.feature.color = rightClickHighted.originalColor;
+        //     rightClickHighted.feature = undefined;
+        //   }
 
-          // Pick a new feature
-          let pickedFeature = viewer.scene.pick(movement.position);
-          if (!Cesium.defined(pickedFeature)) {
-            // this.isLayerDialogVisible = false;
-            return;
-          }
+        //   // Pick a new feature
+        //   let pickedFeature = viewer.scene.pick(movement.position);
+        //   if (!Cesium.defined(pickedFeature)) {
+        //     // this.isLayerDialogVisible = false;
+        //     return;
+        //   }
 
-          //undo the moveFeature Highlight the feature
-          // moveHighlighted.feature.color = moveHighlighted.originalColor;
-          // moveHighlighted.feature = undefined;
+        //   //undo the moveFeature Highlight the feature
+        //   // moveHighlighted.feature.color = moveHighlighted.originalColor;
+        //   // moveHighlighted.feature = undefined;
 
-          rightClickHighted.feature = pickedFeature;
-          Cesium.Color.clone(
-            pickedFeature.color,
-            rightClickHighted.originalColor
-          );
-          pickedFeature.color = Cesium.Color.BLUE;
-          // let pickedFeature = viewer.scene.pick(movement.position);
-          if (Cesium.defined(pickedFeature)) {
-            if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
-              if (
-                pickedFeature.tileset._url ===
-                "3DTiles/drill_3dtiles/tileset.json"
-              ) {
-                let cartesian = viewer.scene.pickPosition(movement.position);
-                let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const holecode = pickedFeature.getProperty("钻孔编码");
-                console.log(
-                  pickedFeature.getProperty("孔口标高"),
-                  this.getMdlDegreeCenter(cartographic)[0]
-                );
-                let mhDistance =
-                  pickedFeature.getProperty("孔口标高") -
-                  this.getMdlDegreeCenter(cartographic)[0];
-                console.log(mhDistance);
-                this.$http
-                  .get("/getHoleLayerInfoByHoleCode", {
-                    params: {
-                      holecode: holecode,
-                    },
-                  })
-                  .then((res) => {
-                    this.drillName = holecode;
-                    this.layerInfo = res.data.data;
-                    this.isLayerDialogVisible = true;
-                  });
-              } else if (
-                pickedFeature.tileset._url ===
-                "3DTiles/model_3dtiles/tileset.json"
-              ) {
-                this.tableCommonData = [];
-                let titles = "地层编码";
-                this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
-                let resStr = pickedFeature.getProperty("地层编码");
-                let obj = {
-                  label: titles,
-                  value: resStr,
-                };
-                this.tableCommonData.push(obj);
-                this.isCommonVisible = true;
-              } else {
-                this.tableCommonData = [];
-                let propertyList = pickedFeature.getPropertyNames();
-                for (let i = 0; i < propertyList.length; i++) {
-                  let obj = {
-                    label: propertyList[i],
-                    value: pickedFeature.getProperty(propertyList[i]),
-                  };
-                  this.tableTitleTheme = "地层信息"; //设置表格title sisi
-                  this.tableCommonData.push(obj);
-                  this.isCommonVisible = true;
-                }
-              }
-            } else {
-              Notification({
-                title: "提示",
-                message: "该3dtiles没有属性",
-                duration: "2000",
-              });
-            }
-          }
-        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        //   rightClickHighted.feature = pickedFeature;
+        //   Cesium.Color.clone(
+        //     pickedFeature.color,
+        //     rightClickHighted.originalColor
+        //   );
+        //   pickedFeature.color = Cesium.Color.BLUE;
+        //   // let pickedFeature = viewer.scene.pick(movement.position);
+        //   if (Cesium.defined(pickedFeature)) {
+        //     if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
+        //       if (
+        //         pickedFeature.tileset._url ===
+        //         "3DTiles/drill_3dtiles/tileset.json"
+        //       ) {
+        //         let cartesian = viewer.scene.pickPosition(movement.position);
+        //         let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        //         const holecode = pickedFeature.getProperty("钻孔编码");
+        //         console.log(
+        //           pickedFeature.getProperty("孔口标高"),
+        //           this.getMdlDegreeCenter(cartographic)[0]
+        //         );
+        //         let mhDistance =
+        //           pickedFeature.getProperty("孔口标高") -
+        //           this.getMdlDegreeCenter(cartographic)[0];
+        //         console.log(mhDistance);
+        //         this.$http
+        //           .get("/getHoleLayerInfoByHoleCode", {
+        //             params: {
+        //               holecode: holecode,
+        //             },
+        //           })
+        //           .then((res) => {
+        //             this.drillName = holecode;
+        //             this.layerInfo = res.data.data;
+        //             this.isLayerDialogVisible = true;
+        //           });
+        //       } else if (
+        //         pickedFeature.tileset._url ===
+        //         "3DTiles/model_3dtiles/tileset.json"
+        //       ) {
+        //         this.tableCommonData = [];
+        //         let titles = "地层编码";
+        //         this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
+        //         let resStr = pickedFeature.getProperty("地层编码");
+        //         let obj = {
+        //           label: titles,
+        //           value: resStr,
+        //         };
+        //         this.tableCommonData.push(obj);
+        //         this.isCommonVisible = true;
+        //       } else {
+        //         this.tableCommonData = [];
+        //         let propertyList = pickedFeature.getPropertyNames();
+        //         for (let i = 0; i < propertyList.length; i++) {
+        //           let obj = {
+        //             label: propertyList[i],
+        //             value: pickedFeature.getProperty(propertyList[i]),
+        //           };
+        //           this.tableTitleTheme = "地层信息"; //设置表格title sisi
+        //           this.tableCommonData.push(obj);
+        //           this.isCommonVisible = true;
+        //           console.log("右键查询");
+        //         }
+        //       }
+        //     } else {
+        //       Notification({
+        //         title: "提示",
+        //         message: "该3dtiles没有属性",
+        //         duration: "2000",
+        //       });
+        //     }
+        //   }
+        // }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
         // 注册左键事件
         viewer.screenSpaceEventHandler.setInputAction((movement) => {
+          if(this.get3DTilesFeature(movement)>-1) return;
           clearTimeout(this.flagTimer);
           this.flagTimer = window.setTimeout(() => {
             let pick = viewer.scene.pick(movement.position);
@@ -1304,6 +1346,7 @@ export default {
               }
             }
           }, 200);
+          console.log("左键查询");
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //注册移动事件
@@ -1441,9 +1484,107 @@ export default {
               this.isvirtualLayerDialogVisible = true;
             }
           }
+          console.log("双击左键");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
       }
     },
+
+    //获取3dtiles 的feature
+    get3DTilesFeature(movement){
+      // If a feature was previously highlighted, undo the highlight
+      if (Cesium.defined(rightClickHighted.feature)) {
+        rightClickHighted.feature.color = rightClickHighted.originalColor;
+        rightClickHighted.feature = undefined;
+      }
+
+      // Pick a new feature
+      let pickedFeature = viewer.scene.pick(movement.position);
+      if (!Cesium.defined(pickedFeature)) {
+        // this.isLayerDialogVisible = false;
+        return;
+      }
+
+      //undo the moveFeature Highlight the feature
+      // moveHighlighted.feature.color = moveHighlighted.originalColor;
+      // moveHighlighted.feature = undefined;
+
+      rightClickHighted.feature = pickedFeature;
+      Cesium.Color.clone(
+        pickedFeature.color,
+        rightClickHighted.originalColor
+      );
+      console.log("pickedFeature:",pickedFeature);
+      console.log("rightClickHighted:",rightClickHighted);
+      pickedFeature.color = Cesium.Color.BLUE;
+      // let pickedFeature = viewer.scene.pick(movement.position);
+      if (Cesium.defined(pickedFeature)) {
+        if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
+          if (
+            pickedFeature.tileset._url ===
+            "3DTiles/drill_3dtiles/tileset.json"
+          ) {
+            let cartesian = viewer.scene.pickPosition(movement.position);
+            let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            const holecode = pickedFeature.getProperty("钻孔编码");
+            console.log(
+              pickedFeature.getProperty("孔口标高"),
+              this.getMdlDegreeCenter(cartographic)[0]
+            );
+            let mhDistance =
+              pickedFeature.getProperty("孔口标高") -
+              this.getMdlDegreeCenter(cartographic)[0];
+            console.log(mhDistance);
+            this.$http
+              .get("/getHoleLayerInfoByHoleCode", {
+                params: {
+                  holecode: holecode,
+                },
+              })
+              .then((res) => {
+                this.drillName = holecode;
+                this.layerInfo = res.data.data;
+                this.isLayerDialogVisible = true;
+              });
+          } else if (
+            pickedFeature.tileset._url ===
+            "3DTiles/model_3dtiles/tileset.json"
+          ) {
+            this.tableCommonData = [];
+            let titles = "地层编码";
+            this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
+            let resStr = pickedFeature.getProperty("地层编码");
+            let obj = {
+              label: titles,
+              value: resStr,
+            };
+            this.tableCommonData.push(obj);
+            this.isCommonVisible = true;
+          } else {
+            this.tableCommonData = [];
+            let propertyList = pickedFeature.getPropertyNames();
+            for (let i = 0; i < propertyList.length; i++) {
+              let obj = {
+                label: propertyList[i],
+                value: pickedFeature.getProperty(propertyList[i]),
+              };
+              this.tableTitleTheme = "地层信息"; //设置表格title sisi
+              this.tableCommonData.push(obj);
+              this.isCommonVisible = true;
+            }
+          }
+          return 1;
+        } else {
+          Notification({
+            title: "提示",
+            message: "该3dtiles没有属性",
+            duration: "2000",
+          });
+          return 0;
+        }
+      }
+      return -1;
+    },
+
     // 绘制线
     drawLine(leftPoint, secPoint, color) {
       viewer.entities.add({
@@ -1584,6 +1725,13 @@ export default {
         case 1:
           if (viewer) {
             viewer.scene.globe.show = !viewer.scene.globe.show;
+            // 修改背景颜色
+            viewer.scene.skyBox.show = false;
+            viewer.scene.sun.show = false;
+            viewer.scene.moon.show = false;
+            viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
+            viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+            viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
           }
           break;
         case 2:
@@ -1594,11 +1742,16 @@ export default {
           }
           break;
         case 3:
-          console.log("复位");
           if (viewer) {
             this.onClickReset();
           }
           break;
+        case 4:
+          if (viewer) {
+            console.log("地形");
+            this.loadTerrain();
+          }
+          break;         
         default:
           break;
       }
@@ -1622,6 +1775,17 @@ export default {
             // 定位完成之后的回调函数
           },
         });
+        // let initialPosition = Cesium.Cartesian3.fromDegrees(110.435314, 40.960521, 500000.0 );
+        // let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+        //   21.27879878293835,
+        //   -21.34390550872461,
+        //   0.0716951918898415
+        // );
+        // viewer.scene.camera.setView({
+        //   destination: initialPosition,
+        //   orientation: initialOrientation,
+        //   endTransform: Cesium.Matrix4.IDENTITY,
+        // });
     },
     receptWifeinfo(val) {
       for (let i = 0; i < tileSetList.length; i++) {
@@ -1642,6 +1806,17 @@ export default {
     receptAlphaInfo(alpha) {
       viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
         Cesium.Math.clamp(alpha, 0.0, 1.0);
+    },
+    receptImageryAlpha(alpha){
+      console.log("图层透明度");
+      for (let i = 0; i < imageryLayers._layers.length; i++) {
+        if (imageryLayers._layers[i].imageryProvider.name !== "tdtCiaLayer" &&
+        imageryLayers._layers[i].imageryProvider.name !== "vecTypeESRICOC" &&
+        imageryLayers._layers[i].imageryProvider.name !== "vecTypeOSM" &&
+        imageryLayers._layers[i].imageryProvider.name !== "imgTypeESRIMap") {
+          imageryLayers._layers[i].alpha = alpha;
+        }
+      }
     },
     async receptSearchInfo(item) {
       // 是否加载钻孔并显示
@@ -1756,6 +1931,19 @@ export default {
           console.log(this.$x2js.xml2js(res.data)); // 将xml解析成json格式，获取所有图层
         });
     },
+    loadTerrain(){
+      console.log("viewer.scene.terrainProvider:",viewer.scene.terrainProvider);
+      if (viewer.scene.terrainProvider.hasWaterMask) {
+          let terrain = new Cesium.EllipsoidTerrainProvider();
+          viewer.terrainProvider = terrain;
+      }else{
+          let terrain = new Cesium.createWorldTerrain({
+                  requestWaterMask : true,
+                  requestVertexNormals : true
+          });
+          viewer.terrainProvider = terrain;
+      }
+    },
 
     onMessageFromComponent() {},
     destroyMessage() {},
@@ -1769,6 +1957,7 @@ export default {
     this.registerOnclickEvent();
     // let a = CesiumUtils.drawUtils(viewer);
     // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);
+      eventVue.$emit("sendCesiumViewer", viewer);
   },
   beforeDestroy() {
     this.destroyMessage();

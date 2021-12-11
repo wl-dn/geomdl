@@ -56,14 +56,6 @@ export default {
               label: "三维钻孔模型",
               name: "holemdl",
               url: "3DTiles/drill_3dtiles/tileset.json",
-              // url: "3DTiles/testHoleMdl/2/tileset.json",
-              serviceType: "3DTiles",
-            },
-            {
-              id: "1-21",
-              label: "三维钻孔模型-分级",
-              name: "holemdl",
-              url: "3DTiles/holeMdlLod/tileset.json",
               serviceType: "3DTiles",
             },
             {

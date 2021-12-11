@@ -44,6 +44,11 @@ export default {
           index: 3,
           active: false,
         },
+        {
+          label: "地形",
+          index: 4,
+          active: false,
+        },
       ],
     };
   },
