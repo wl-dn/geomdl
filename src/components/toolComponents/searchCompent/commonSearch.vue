@@ -368,6 +368,7 @@ export default {
       // 模糊查询
       if (index === 1) {
         if (this.vagueInput !== "") {
+          console.log("钻孔查询");
           this.$http
             .get("/commonSearchByParams", {
               params: {
@@ -586,6 +587,19 @@ export default {
   },
   watch: {
     radio(val) {
+      console.log("切换",val);
+      switch (parseInt(val)) {
+        case 1:
+          console.log("切换1");
+          this.resetOnClick(2);
+          break;
+        case 2:
+          console.log("切换2");
+          this.resetOnClick(1);
+          break;
+        default:
+          break;
+      }
       this.$emit("sendResetInfoEvent", 1);
     },
   },

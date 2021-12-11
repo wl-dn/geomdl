@@ -261,7 +261,7 @@ export default {
 }
 
 .searchResultBox {
-  width: 600px;
+  width: 500px;
   position: absolute;
   top: 331px;
   left: 31px;

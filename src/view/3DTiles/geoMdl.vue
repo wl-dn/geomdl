@@ -372,7 +372,9 @@ export default {
 
       // 初始化钻孔层
       this.holeBillbordsLayer = viewer.scene.primitives.add(
-        new Cesium.BillboardCollection()
+        new Cesium.BillboardCollection({
+          scene: viewer.scene,
+        })
       );
 
       // viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin); 3dtiles监视器
@@ -786,9 +788,9 @@ export default {
       for (let i = 0; i < holeResult.data.data.length; i++) {
         let lon = Number(holeResult.data.data[i].borelon);
         let lat = Number(holeResult.data.data[i].borelat);
-        // let height = Number(holeResult.data.data[i].boreheight);
+        let height = Number(holeResult.data.data[i].boreheight);
         let label = holeResult.data.data[i].borename;
-        const position = Cesium.Cartesian3.fromDegrees(lon, lat , 0);
+        const position = Cesium.Cartesian3.fromDegrees(lon, lat);
         if(i === 1){
             // viewer.camera.flyTo({   //无法定位到primitivesCollection，折中定位到第一个钻孔点
               // destination: Cesium.Cartesian3.fromDegrees(lon, lat, 100000.0),
@@ -834,13 +836,13 @@ export default {
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER, // default
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // default: CENTER
-        scale: 2.0, // default: 1.0
+        // scale: 2.0, // default: 1.0
         color: Cesium.Color.LIME, // default: WHITE
         // rotation: Cesium.Math.PI_OVER_FOUR, // default: 0.0
         alignedAxis: Cesium.Cartesian3.ZERO, // default
-        width: 10, // default: undefined
-        height: 10, // default: undefined
-        scaleByDistance: new Cesium.NearFarScalar(1.5e2, 2, 8.0e6, 0.0),    //1500米内1.5倍大小，8.0e6外不可见
+        // width: 10, // default: undefined
+        // height: 10, // default: undefined
+        scaleByDistance: new Cesium.NearFarScalar(1.5e2, 0.8, 8.0e6, 0.0),    //1500米内1.5倍大小，8.0e6外不可见
         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         id: label,
       });
@@ -1501,7 +1503,7 @@ export default {
       let pickedFeature = viewer.scene.pick(movement.position);
       if (!Cesium.defined(pickedFeature)) {
         // this.isLayerDialogVisible = false;
-        return;
+        return -1;
       }
 
       //undo the moveFeature Highlight the feature
@@ -1573,14 +1575,15 @@ export default {
             }
           }
           return 1;
-        } else {
-          Notification({
-            title: "提示",
-            message: "该3dtiles没有属性",
-            duration: "2000",
-          });
-          return 0;
-        }
+        } 
+        // else {
+        //   Notification({
+        //     title: "提示",
+        //     message: "该3dtiles没有属性",
+        //     duration: "2000",
+        //   });
+        //   return 0;
+        // }
       }
       return -1;
     },
