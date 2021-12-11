@@ -324,6 +324,7 @@ export default {
         baseLayerPicker: showWedgit, // 底图切换控件
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
+        infoBox: true, //是否显示信息框
 
         // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
@@ -1186,7 +1187,7 @@ export default {
     registerOnclickEvent() {
       if (viewer) {
         // // 注册右键事件
-        // viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        // handler.setInputAction((movement) => {
         //   // If a feature was previously highlighted, undo the highlight
         //   if (Cesium.defined(rightClickHighted.feature)) {
         //     rightClickHighted.feature.color = rightClickHighted.originalColor;
@@ -1277,8 +1278,9 @@ export default {
         //   }
         // }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
+        let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         // 注册左键事件
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        handler.setInputAction((movement) => {
           if(this.get3DTilesFeature(movement)>-1) return;
           clearTimeout(this.flagTimer);
           this.flagTimer = window.setTimeout(() => {
@@ -1352,38 +1354,28 @@ export default {
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //注册移动事件
-        // viewer.screenSpaceEventHandler.setInputAction((movement) => {
-        //   // 移动变小手
-        //   const moveFeature = viewer.scene.pick(movement.endPosition);
-        //   if (Cesium.defined(moveFeature)) {
-        //     viewer._container.style.cursor = "pointer";
-        //   } else {
-        //     viewer._container.style.cursor = "default";
-        //   }
-        //   return;
-        //   // If a feature was previously highlighted, undo the highlight
-        //   if (Cesium.defined(moveHighlighted.feature)) {
-        //     moveHighlighted.feature.color = moveHighlighted.originalColor;
-        //     moveHighlighted.feature = undefined;
-        //   }
-
-        //   // Pick a new feature
-        //   let pickedFeature = viewer.scene.pick(movement.endPosition);
-        //   if (!Cesium.defined(pickedFeature)) {
-        //     return;
-        //   }
-
-        //   // Highlight the feature
-        //   moveHighlighted.feature = pickedFeature;
-        //   Cesium.Color.clone(
-        //     pickedFeature.color,
-        //     moveHighlighted.originalColor
-        //   );
-        //   pickedFeature.color = Cesium.Color.YELLOW;
-        // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        handler.setInputAction((movement) => {
+          // 移动变小手
+          const moveFeature = viewer.scene.pick(movement.endPosition);
+          if (Cesium.defined(moveFeature)) {
+            viewer._container.style.cursor = "pointer";
+            //十字 crosshair
+          } else {
+            viewer._container.style.cursor = "default";
+            return;
+          }
+          console.log("moveFeature:",this.pickFeatureFromScreen(moveFeature));
+          // Highlight the feature
+          moveHighlighted.feature = moveFeature;
+          Cesium.Color.clone(
+            moveFeature.color,
+            moveHighlighted.originalColor
+          );
+          moveFeature.color = Cesium.Color.BLUE;
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         
         // 注册双击事件（注意区分单击和双击事件）
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        handler.setInputAction((movement) => {
           clearTimeout(this.flagTimer);
           if (this.activeDoubleEvent) {
             let pick = viewer.scene.pick(movement.position);
@@ -1945,6 +1937,67 @@ export default {
                   requestVertexNormals : true
           });
           viewer.terrainProvider = terrain;
+      }
+    },
+
+  /**
+     * 拾取屏幕像素位置的cesium要素，并判断是什么类型(支持：Entity Cesium3DTileset Billboard Primitive)
+     * @param x
+     * @param y
+     * @param feature 获取到的对象
+     * @returns {*}
+     */
+    pickFeatureFromScreen(feature){
+        let resp = {
+            pickResult: null,
+        }
+        // let pickCartesian2 = new Cesium.Cartesian2(x, y)
+        // let feature = viewer.scene.pick(pickCartesian2);
+        if (Cesium.defined(feature)) {
+            // feature.primitive.constructor.name 也可以获取类型
+            resp.pickResult = feature // 拾取结果
+            if (feature.hasOwnProperty('id') && feature.id instanceof Cesium.Entity) {
+                // entity: {collection, id, primitive}
+                resp.type = 'Entity'
+                resp.detailType = feature.primitive.constructor.name
+                resp.entity = feature.id
+            } else if (feature.primitive instanceof Cesium.Cesium3DTileset) {
+                // 3DTile: {content, primitive}
+                resp.type = 'Cesium3DTileset'
+            } else if (feature.primitive instanceof Cesium.Billboard) {
+                // primitive-billboard: {collection, id, primitive}
+                resp.type = 'Billboard'
+                resp.id = feature.id
+                resp.billboardCollection = feature.collection
+                resp.billboard = feature.primitive
+            } else if (feature.primitive instanceof Cesium.Primitive) {
+                // primitive: { primitive}
+                resp.type = 'Primitive'
+                resp.primitive = feature.primitive
+            } else if (feature.primitive instanceof Cesium.Model) {
+                // primitive: { primitive}
+                resp.type = 'Primitive'
+                resp.detailType = 'Model'
+                resp.primitive = feature.primitive
+            }
+        }
+        return resp
+    },
+
+    /**
+     * @param HightedFeatureObj 已经高亮的feature对象
+     * @param currentFeature 当前feature
+     */
+    setFeatureColor(HightedFeatureObj,currentFeature){
+      if (Cesium.defined(HightedFeatureObj.feature)) {
+        HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        HightedFeatureObj.feature = undefined;
+      }
+      let pickResult = this.pickFeatureFromScreen(feature);
+      if (pickResult) {
+        
+      } else {
+        
       }
     },
 

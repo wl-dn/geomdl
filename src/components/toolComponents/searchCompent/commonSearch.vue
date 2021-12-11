@@ -68,7 +68,7 @@
             >
             </el-option>
           </el-select>
-          <span style="padding: 0 10px">=</span>
+          <span style="padding: 0 10px"> </span>
           <el-input class="fieldValueinput" v-model="fieldValue"></el-input>
         </div>
         <div class="commonSearchBtn">
@@ -368,7 +368,6 @@ export default {
       // 模糊查询
       if (index === 1) {
         if (this.vagueInput !== "") {
-          console.log("钻孔查询");
           this.$http
             .get("/commonSearchByParams", {
               params: {
@@ -403,6 +402,7 @@ export default {
     },
     // 图层查询
     searchByTC() {
+      console.log("图层查询");
       if (this.layerSelectValue === "") return;
       let layerItem = this.layerOptions.find((obj) => {
         if (obj.layer === this.layerSelectValue) {
@@ -413,13 +413,14 @@ export default {
       let url = tempLayreItem.wfsUrl;
       let cqlStr = "";
       const reg = /^\d+$/; // 判断是否为数字
-      const flag = reg.test(this.fieldValue);
+      // const flag = reg.test(this.fieldValue);
       let tempStr = this.fieldValue;
-      if (!flag) {
-        tempStr = `'${tempStr}'`;
-      }
+      // if (!flag) {
+      //   tempStr = `'${tempStr}'`;
+      // }
       if (this.fieldSelectValue !== "" && this.fieldValue !== "") {
-        cqlStr = `${this.fieldSelectValue}=${tempStr}`;
+        cqlStr = `${this.fieldSelectValue}` +' like \'%';
+        cqlStr += `${tempStr}` + '%\'';
         url = url + "&cql_filter=" + cqlStr;
       }
       let sendData = [];
@@ -587,14 +588,11 @@ export default {
   },
   watch: {
     radio(val) {
-      console.log("切换",val);
       switch (parseInt(val)) {
         case 1:
-          console.log("切换1");
           this.resetOnClick(2);
           break;
         case 2:
-          console.log("切换2");
           this.resetOnClick(1);
           break;
         default:
