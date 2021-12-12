@@ -33,7 +33,7 @@ Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJkNmY0N
 
 // 配置axios请求
 import axios from 'axios'
-// axios.defaults.baseURL = "http://localhost:8383/tsy"; //tsy内网
+// axios.defaults.baseURL = "http://localhost:8383/tsy"; //本地
 axios.defaults.baseURL = "http://192.10.3.237:8383/tsy"; //tsy内网
 
 Vue.prototype.$http = axios;

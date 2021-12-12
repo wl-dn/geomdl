@@ -346,6 +346,9 @@ export default {
       viewer.scene.sun.show = false;
       viewer.scene.moon.show = false;
       viewer.scene.backgroundColor = Cesium.Color.BLACK;
+
+      // 关闭光照
+      viewer.scene.globe.enableLighting = false; //关闭光照
       // 加载三维地形
       // let terrainProvider = new Cesium.CesiumTerrainProvider({
       //   url: "http://192.10.3.237:81/tsyTerrain/",
