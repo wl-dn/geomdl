@@ -6,6 +6,55 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "18497349",
+      "name": "地上地下",
+      "font_class": "dishangdixia",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "1221894",
+      "name": "房子 实心",
+      "font_class": "solid-home",
+      "unicode": "e641",
+      "unicode_decimal": 58945
+    },
+    {
+      "icon_id": "1302",
+      "name": "加",
+      "font_class": "jia",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "162781",
+      "name": "减",
+      "font_class": "jian",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "5387606",
+      "name": "全屏",
+      "font_class": "quanping",
+      "unicode": "eb11",
+      "unicode_decimal": 60177
+    },
+    {
+      "icon_id": "5064085",
+      "name": "管理",
+      "font_class": "guanli",
+      "unicode": "e640",
+      "unicode_decimal": 58944
+    },
+    {
+      "icon_id": "17583543",
+      "name": "tin地形",
+      "font_class": "tindixing",
+      "unicode": "eca5",
+      "unicode_decimal": 60581
+    },
+    {
       "icon_id": "991651",
       "name": "圆圈",
       "font_class": "yuanquan",

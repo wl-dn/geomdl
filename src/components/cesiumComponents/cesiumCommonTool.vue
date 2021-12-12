@@ -8,18 +8,28 @@
 -->
 <template>
   <div class="CesiumTool_box" v-if="isCesiumCommonToolVisible">
-    <span
-      :class="[
-        {
-          activeSpan: item.active === true,
-        },
-      ]"
-      v-for="(item, i) in toolList"
-      :key="i"
-      @click="onClickCesiumTool(item)"
-    >
-      {{ item.label }}</span
-    >
+    <ul>
+      <template v-for="(item, index) in toolList">
+        <el-tooltip
+          effect="dark"
+          :content="item.label"
+          placement="right-start"
+          :key="index"
+        >
+          <li
+            @click="onClickCesiumTool(item)"
+            :class="[
+              'iconfont',
+              item.iconClass,
+              {
+                activeSpan: item.active === true,
+              },
+            ]"
+          ></li>
+        </el-tooltip>
+      </template>
+    </ul>
+    <!-- <span> {{ item.label }}</span> -->
   </div>
 </template>
 
@@ -32,18 +42,52 @@ export default {
         {
           label: "地球显影",
           index: 1,
+          iconClass: "icon-diqiu",
           active: false,
         },
         {
           label: "地下空间",
           index: 2,
+          iconClass: "icon-dishangdixia",
+
           active: false,
         },
         {
           label: "复位",
           index: 3,
+          iconClass: "icon-solid-home",
+
           active: false,
         },
+        {
+          label: "放大",
+          index: 4,
+          iconClass: "icon-jia",
+
+          active: false,
+        },
+
+        {
+          label: "缩小",
+          index: 5,
+          iconClass: "icon-jian",
+
+          active: false,
+        },
+
+        {
+          label: "全屏",
+          index: 6,
+          iconClass: "icon-quanping",
+          active: false,
+        },
+
+        // {
+        //   label: "地形",
+        //   index: 4,
+        //   iconClass: "icon-quanping",
+        //   active: false,
+        // },
       ],
     };
   },
@@ -51,9 +95,9 @@ export default {
   computed: {},
   methods: {
     onClickCesiumTool(item) {
-      if (item.index !== 3) {
+      // if (item.index !== 3) {
         item.active = !item.active;
-      }
+      // }
       this.$emit("commonToolHandleOnClick", item);
     },
     onMessageFromComponent() {},
@@ -67,6 +111,29 @@ export default {
 
 <style scoped>
 .CesiumTool_box {
+  position: absolute;
+  width: 35px;
+  left: 10px;
+  bottom: 20px;
+  z-index: 1;
+}
+.CesiumTool_box ul {
+  width: 100%;
+  padding: 0px;
+  margin: 0px;
+  list-style: none;
+}
+.CesiumTool_box ul li {
+  background-color: rgb(62, 72, 82);
+  color: rgb(229, 229, 227);
+  margin-bottom: 10px;
+  text-align: center;
+  height: 35px;
+  line-height: 35px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+/* .CesiumTool_box {
   position: absolute;
   bottom: -20px;
   color: white;
@@ -91,5 +158,5 @@ export default {
 }
 .isActiveClass {
   color: #000;
-}
+} */
 </style>

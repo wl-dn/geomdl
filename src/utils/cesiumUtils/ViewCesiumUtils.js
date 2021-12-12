@@ -6,6 +6,7 @@
  * @LastEditors: wenlong
  * @LastEditTime: 2021-08-23 14:54:33
  */
+import * as Cesium from "cesium"
 export default class ViewCesiumUtils {
     constructor() {
     }
@@ -28,5 +29,143 @@ export default class ViewCesiumUtils {
             animation: showWedgit, // 控制场景动画的播放速度控件
         };
         return viewerOption;
+    }
+    // 放大
+    static zoomOut(viewer) {
+        // 获取当前镜头位置的笛卡尔坐标
+        let cameraPos = viewer.camera.position;
+        // 获取当前坐标系标准
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+        // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+        let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+        // 获取镜头的高度
+        let height = cartographic.height;
+        // 根据上面当前镜头的位置，获取该中心位置的经纬度坐标
+        let centerLon = parseFloat(Cesium.Math.toDegrees(cartographic.longitude).toFixed(8));
+        let centerLat = parseFloat(Cesium.Math.toDegrees(cartographic.latitude).toFixed(8));
+
+        // 镜头拉远
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, height / 1.8),
+            duration: 1.0
+        });
+
+    }
+    // 缩小
+    static zoomIn(viewer) {
+        // 获取当前镜头位置的笛卡尔坐标
+        let cameraPos = viewer.camera.position;
+        // 获取当前坐标系标准
+        let ellipsoid = viewer.scene.globe.ellipsoid;
+        // 根据坐标系标准，将笛卡尔坐标转换为地理坐标
+        let cartographic = ellipsoid.cartesianToCartographic(cameraPos);
+        // 获取镜头的高度
+        let height = cartographic.height;
+        // 根据上面当前镜头的位置，获取该中心位置的经纬度坐标
+        let centerLon = parseFloat(Cesium.Math.toDegrees(cartographic.longitude).toFixed(8));
+        let centerLat = parseFloat(Cesium.Math.toDegrees(cartographic.latitude).toFixed(8));
+        // 镜头拉近
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(centerLon, centerLat, height * 1.8),
+            duration: 1.0
+        });
+    }
+    // 复位
+    static resetView(viewer, lon, lat, height, heading, pitch, roll) {
+        heading = heading || 348.4202942851978
+        pitch = pitch || -89.74026687972041
+        roll = roll || 0
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, height),
+            orientation: {
+                heading: Cesium.Math.toRadians(heading),  // 朝向 代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
+                pitch: Cesium.Math.toRadians(pitch),   // 俯仰角 代表镜头上下方向,正值为上,负值为下.            
+                roll: Cesium.Math.toRadians(roll), //代表镜头左右倾斜.正值,向右倾斜,负值向左倾斜
+            },
+            complete: function callback() {
+                // 定位完成之后的回调函数
+            },
+        });
+    }
+    static taggleUnderSpace(viewer) {
+        viewer.scene.screenSpaceCameraController.enableCollisionDetection =
+            !viewer.scene.screenSpaceCameraController.enableCollisionDetection;
+    }
+    // 全屏/退出
+    static taggleFullScreen(active) {
+        active
+            ? Cesium.Fullscreen.requestFullscreen(document.body)
+            : Cesium.Fullscreen.exitFullscreen();
+    }
+    static taggleEarthShow(viewer) {
+        viewer.scene.globe.show = !viewer.scene.globe.show;
+        // 修改背景颜色
+        viewer.scene.skyBox.show = false;
+        viewer.scene.sun.show = false;
+        viewer.scene.moon.show = false;
+        viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
+        viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+        viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
+    }
+    // 改变透明度
+    static changeTerrainAlpha(viewer, alpha) {
+        viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
+            Cesium.Math.clamp(alpha, 0.0, 1.0);
+    }
+    // 获取树的所有叶节点
+    static getTreeLayerData(listData, layerData) {
+        if (listData.children) {
+            for (let i = 0; i < listData.children.length; i++) {
+                const listItem = listData.children[i];
+                this.createTreeLayerData(listItem, layerData);
+            }
+        } else {
+            const dataItem = JSON.parse(JSON.stringify(listData))
+            layerData.push(dataItem);
+            return
+        }
+    }
+
+    // 根据高度回去对应的级别
+    static getMapLevel(height) {
+        if (height > 48000000) {
+            return 0;
+        } else if (height > 24000000) {
+            return 1;
+        } else if (height > 12000000) {
+            return 2;
+        } else if (height > 6000000) {
+            return 3;
+        } else if (height > 3000000) {
+            return 4;
+        } else if (height > 1500000) {
+            return 5;
+        } else if (height > 750000) {
+            return 6;
+        } else if (height > 375000) {
+            return 7;
+        } else if (height > 187500) {
+            return 8;
+        } else if (height > 93750) {
+            return 9;
+        } else if (height > 46875) {
+            return 10;
+        } else if (height > 23437.5) {
+            return 11;
+        } else if (height > 11718.75) {
+            return 12;
+        } else if (height > 5859.38) {
+            return 13;
+        } else if (height > 2929.69) {
+            return 14;
+        } else if (height > 1464.84) {
+            return 15;
+        } else if (height > 732.42) {
+            return 16;
+        } else if (height > 366.21) {
+            return 17;
+        } else {
+            return 18;
+        }
     }
 }

@@ -101,7 +101,10 @@
     ></searchBar>
 
     <!-- 底部信息状态栏 -->
-    <bottomTool @sendAlphaInfo="receptAlphaInfo"></bottomTool>
+    <bottomTool
+      @sendAlphaInfo="receptAlphaInfo"
+      @sendImageryAlpha="receptImageryAlpha"
+    ></bottomTool>
   </div>
 </template>
 
@@ -129,6 +132,7 @@ import { Notification } from "element-ui";
 import eventVue from "../../assets/js/eventVue";
 
 import PathGraphics from "cesium/Source/DataSources/PathGraphics";
+import Viewer from "cesium/Source/Widgets/Viewer/Viewer";
 
 let tileSetList = [];
 let viewer = null;
@@ -136,6 +140,7 @@ let imageryLayers = null;
 let moveHighlighted = {
   feature: undefined,
   originalColor: new Cesium.Color(),
+  type: undefined,
 };
 let rightClickHighted = {
   feature: undefined,
@@ -223,6 +228,9 @@ export default {
 
       // 地层厚度
       layerThickness: [4.3, 7.2, 3.4, 5.8, 10.0, 3.9, 3.7, 4.5],
+
+      //钻孔聚类监听对象
+      removeListener: undefined,
     };
   },
   components: {
@@ -304,6 +312,11 @@ export default {
       let tdurl =
         "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
         this.tiandituTk;
+      let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
+        url: "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+        layers: "imgTypeESRIMap",
+      });
+      wmsImageLayer.name = "imgTypeESRIMap";
       viewer = new Cesium.Viewer("cesiumContainer", {
         geocoder: showWedgit, // 地理位置查询定位控件
         homeButton: showWedgit, // 默认相机位置控件
@@ -316,6 +329,7 @@ export default {
         baseLayerPicker: showWedgit, // 底图切换控件
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
+        infoBox: false, //是否显示信息框
 
         // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
@@ -323,16 +337,17 @@ export default {
         // imageryProvider: new Cesium.SingleTileImageryProvider({
         //   url: "GlobalBkLayer.jpg",
         // }), // 简单加载，解决无法加载地图的问题
-        imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-          // 加载天地图影像
-          url: tdurl,
-          subdomains: subdomains,
-          layer: "tdtImgLayer",
-          style: "default",
-          format: "image/jpeg",
-          tileMatrixSetID: "GoogleMapsCompatible",
-          show: true,
-        }),
+        // imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
+        //   // 加载天地图影像
+        //   url: tdurl,
+        //   subdomains: subdomains,
+        //   layer: "tdtImgLayer",
+        //   style: "default",
+        //   format: "image/jpeg",
+        //   tileMatrixSetID: "GoogleMapsCompatible",
+        //   show: true,
+        // }),
+        imageryProvider: wmsImageLayer,
 
         orderIndependentTranslucency: false,
         contextOptions: {
@@ -349,6 +364,10 @@ export default {
 
       // 关闭光照
       viewer.scene.globe.enableLighting = false; //关闭光照
+      // viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
+      // viewer.scene.globe.show = false; //不显示地球，这条和地球透明度选一个就可以
+      // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+      // viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
       // 加载三维地形
       // let terrainProvider = new Cesium.CesiumTerrainProvider({
       //   url: "http://192.10.3.237:81/tsyTerrain/",
@@ -363,7 +382,9 @@ export default {
 
       // 初始化钻孔层
       this.holeBillbordsLayer = viewer.scene.primitives.add(
-        new Cesium.BillboardCollection()
+        new Cesium.BillboardCollection({
+          scene: viewer.scene,
+        })
       );
 
       // viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin); 3dtiles监视器
@@ -377,22 +398,16 @@ export default {
         new Cesium.NearFarScalar(1000.0, 1, 1000000.0, 1);
 
       // 将三维球定位到中国
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(103.84, 31.15, 17850000),
-        orientation: {
-          heading: Cesium.Math.toRadians(348.4202942851978),
-          pitch: Cesium.Math.toRadians(-89.74026687972041),
-          roll: Cesium.Math.toRadians(0),
-        },
-        complete: function callback() {
-          // 定位完成之后的回调函数
-        },
-      });
-      eventVue.$emit("sendCesiumViewer", viewer);
+      CesiumUtils.viewCesiumUtils().resetView(
+        viewer,
+        113.805972,
+        27.664014,
+        8000000.0
+      );
     },
 
-    // 加载地形服务
-    loadWmsLayer(url, layers, isChecked) {
+    // 加载wms服务
+    async loadWmsLayer(url, layers, isChecked) {
       // 判断图层是否存在
       let obj = this.layerIsExist_2(layers);
       if (obj.flag) {
@@ -411,10 +426,70 @@ export default {
           },
         });
         wmsImageLayer.name = layers;
+        let aa = await wmsImageLayer.readyPromise;
+        console.log("定位");
+        if (imageryLayers) {
+          let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
+          // console.log(imgLayer.rectangle);
+          // viewer.flyTo(imgLayer);
+          imgLayer.getViewableRectangle().then(function (rectangle) {
+            console.log(rectangle);
+            return camera.flyTo({
+              destination: rectangle,
+            });
+          });
+        }
+      }
+    },
+    // 加载ArcGIS服务
+    loadESRILayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
+          url: url,
+          layers: layers,
+        });
+        wmsImageLayer.name = layers;
         if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
       }
     },
-    // 加载筛选后的地形服务（零时的）
+    // 加载OSM服务
+    loadOSMLayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.OpenStreetMapImageryProvider({
+          url: url,
+          layers: layers,
+        });
+        wmsImageLayer.name = layers;
+        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+      }
+    },
+    // 加载UTImage服务
+    loadUTLayer(url, layers, isChecked) {
+      // 判断图层是否存在
+      let obj = this.layerIsExist_2(layers);
+      if (obj.flag) {
+        imageryLayers._layers[obj.index].show = isChecked;
+      } else {
+        let wmsImageLayer = new Cesium.UrlTemplateImageryProvider({
+          url: url,
+          layers: layers,
+          tilingScheme: new Cesium.WebMercatorTilingScheme(),
+          minimumLevel: 1,
+          maximumLevel: 20,
+        });
+        wmsImageLayer.name = layers;
+        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
+      }
+    },
+    // 加载筛选后的wms服务（零时的）
     loadSelectWmsLayer(wmsUrl, layer, label, cqlStr, isChecked) {
       let obj = this.layerIsExist_2("temp" + layer + label);
       if (obj.flag) {
@@ -463,7 +538,8 @@ export default {
       let flagObj = this.kmlSourceIsExist(name);
       console.log(flagObj);
       if (flagObj.flag) {
-        flagObj.dataSource.show = isChecked;
+        // flagObj.dataSource.show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
         return;
       }
       this.$http.get(url).then(async (res) => {
@@ -493,18 +569,21 @@ export default {
       // 判断图层是否存在
       let obj = this.layerIsExist(url);
       if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
+        // imageryLayers._layers[obj.index].show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[obj.index]);
       } else {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
         });
+        viewer.zoomTo(acrgisImagelayer);
         if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
       }
     },
     loadTDMapLayer(url, layers, isChecked) {
       let obj = this.layerIsExist(url);
       if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
+        // imageryLayers._layers[obj.index].show = isChecked;
+        imageryLayers.remove(imageryLayers._layers[obj.index]);
         return;
       }
       const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
@@ -517,6 +596,7 @@ export default {
         tileMatrixSetID: "GoogleMapsCompatible",
         show: true,
       });
+      wmtsImageLayer.name = layers;
       imageryLayers.addImageryProvider(wmtsImageLayer);
     },
     // 加载kml文件
@@ -530,16 +610,17 @@ export default {
       let kmlOptions = {
         camera: viewer.scene.camera,
         canvas: viewer.scene.canvas,
-        // clampToGround: true, // 开启贴地
+        clampToGround: true, // 开启贴地
       };
       let geocachePromise = Cesium.KmlDataSource.load(url, kmlOptions);
       geocachePromise.then((dataSource) => {
+        viewer.flyTo(geocachePromise);
         dataSource.name = name;
         viewer.dataSources.add(dataSource);
-        viewer.flyTo(dataSource.entities);
       });
     },
     selectOnMdlchange(val) {
+      console.log("加载模型");
       this.mdlName = val;
       let tempParams = JSON.parse(
         JSON.stringify(this.$store.getters.getTileMdlTool)
@@ -566,7 +647,9 @@ export default {
       // 加载3Dtiles文件
       let tileSet = new Cesium.Cesium3DTileset({
         url: url,
-        // url: Cesium.IonResource.fromAssetId(8564),
+        //控制切片视角显示的数量，可调整性能
+        maximumScreenSpaceError: 2,
+        maximumNumberOfLoadedTiles: 50,
       });
       const tileset = await tileSet.readyPromise;
       tileset.name = name;
@@ -630,25 +713,51 @@ export default {
       });
       this.mdlName = name;
 
-      this.$store.commit("setTileMdlToolInfo", tempParams);
-      this.isShowTool = false; //调用工具会调用input值进行矩阵变换
+      // this.$store.commit("setTileMdlToolInfo", tempParams);
+      // this.isShowTool = false; //调用工具会调用input值进行矩阵变换
 
-      viewer.scene.globe.show = false;
       // 定位到该模型
       if (name === "holemdl") {
-        viewer.zoomTo(
-          tileSet,
-          new Cesium.HeadingPitchRange(
-            0.0,
-            -0.5,
-            tileSet.boundingSphere.radius * 0.05
-          )
+        console.log("钻孔模型定位", mdlCenterParams);
+        // viewer.zoomTo(
+        //   tileSet,
+        //   new Cesium.HeadingPitchRange(
+        //     0.0,
+        //     -0.5,
+        //     tileSet.boundingSphere.radius * 0.05
+        //   )
+        // );
+        //heading:向左（360-），向右（1+） ; pitch：正上负下
+
+        let initialPosition = Cesium.Cartesian3.fromDegrees(
+          mdlCenterParams[1] + 0.00001,
+          mdlCenterParams[2],
+          mdlCenterParams[0] - 400
         );
+        let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+          357.27879878293835,
+          -21.34390550872461,
+          0.0716951918898415
+        );
+        viewer.scene.camera.setView({
+          destination: initialPosition,
+          orientation: initialOrientation,
+          endTransform: Cesium.Matrix4.IDENTITY,
+        });
       } else {
-        viewer.zoomTo(
-          tileSet,
-          new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
+        CesiumUtils.viewCesiumUtils().resetView(
+          viewer,
+          tempParams.longitude,
+          tempParams.latitude,
+          203172.52,
+          355.46,
+          -90
         );
+        CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
+        // viewer.zoomTo(
+        //   tileSet,
+        //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
+        // );
       }
 
       // 注册模型事件
@@ -686,22 +795,63 @@ export default {
     async loadHoleLayer(url, name, isChecked) {
       let flagObj = this.billbordsIsExist(name);
       if (flagObj.isChecked) {
-        flagObj.obj.show = isChecked;
+        viewer.scene.primitives.remove(flagObj.obj);
+        // flagObj.obj.show = isChecked;
         return;
       }
       //初始化广告牌
       let billboards = viewer.scene.primitives.add(
-        new Cesium.BillboardCollection()
+        new Cesium.BillboardCollection({
+          scene: viewer.scene,
+        })
       );
+      console.log("billboards函数");
       billboards.name = name;
       let holeResult = await this.$http.get(url);
       for (let i = 0; i < holeResult.data.data.length; i++) {
         let lon = Number(holeResult.data.data[i].borelon);
         let lat = Number(holeResult.data.data[i].borelat);
+        let height = Number(holeResult.data.data[i].boreheight);
         let label = holeResult.data.data[i].borename;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
+        if (i === 1) {
+          // viewer.camera.flyTo({   //无法定位到primitivesCollection，折中定位到第一个钻孔点
+          // destination: Cesium.Cartesian3.fromDegrees(lon, lat, 100000.0),
+          // orientation: {
+          //   heading: Cesium.Math.toRadians(40.0),
+          //   pitch: Cesium.Math.toRadians(-35.0),
+          //   roll: 0.0,
+          // },
+          // });
+          // }
+          let initialPosition = Cesium.Cartesian3.fromDegrees(
+            Number(
+              holeResult.data.data[parseInt(holeResult.data.data.length / 2)]
+                .borelon
+            ),
+            Number(
+              holeResult.data.data[parseInt(holeResult.data.data.length / 2)]
+                .borelat
+            ),
+            Number(
+              holeResult.data.data[parseInt(holeResult.data.data.length / 2)]
+                .boreheight
+            ) + 2000
+          );
+          let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+            -11.27879878293835,
+            -20.34390550872461,
+            0.0716951918898415
+          );
+          viewer.scene.camera.setView({
+            destination: initialPosition,
+            orientation: initialOrientation,
+            endTransform: Cesium.Matrix4.IDENTITY,
+          });
+        }
         this.addHolePrimitive(billboards, position, label);
       }
+      // viewer.flyTo(billboards);
     },
 
     // 加载广告牌（钻孔）
@@ -712,23 +862,161 @@ export default {
       // 异步加载的过程
       billboards.add({
         position: position,
-        image: require("../../assets/images/hole.png"),
-        // image: this.drawCanvas(image, label, 10), // 绘制带注记的编号
+        image: require("../../assets/images/clusterIcon/hole.png"),
         show: true,
-
-        pixelOffset: new Cesium.Cartesian2(0, -50), // default: (0, 0)
+        pixelOffset: new Cesium.Cartesian2(0, 0), // default: (0, 0)
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
         horizontalOrigin: Cesium.HorizontalOrigin.CENTER, // default
         verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // default: CENTER
-        scale: 2.0, // default: 1.0
+        // scale: 2.0, // default: 1.0
         color: Cesium.Color.LIME, // default: WHITE
         // rotation: Cesium.Math.PI_OVER_FOUR, // default: 0.0
         alignedAxis: Cesium.Cartesian3.ZERO, // default
         // width: 10, // default: undefined
         // height: 10, // default: undefined
+        scaleByDistance: new Cesium.NearFarScalar(1.5e2, 0.8, 8.0e6, 0.0), //1500米内1.5倍大小，8.0e6外不可见
+        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
         id: label,
       });
-      // };
+    },
+
+    /**
+     *  钻孔点位聚合
+     */
+    async getDataSource(url, name, isChecked) {
+      let holeResult = await this.$http.get(url);
+      let self = this;
+      let options = {
+        camera: viewer.scene.camera,
+        canvas: viewer.scene.canvas,
+        clampToGround: true, //开启贴地
+      };
+      let dataSourcePromise = viewer.dataSources.add(
+        new Cesium.CustomDataSource(name)
+      );
+      const clusterIcon = [
+        {
+          src: require("../../assets/images/clusterIcon/blue.png"),
+        },
+        {
+          src: require("../../assets/images/clusterIcon/green.png"),
+        },
+        {
+          src: require("../../assets/images/clusterIcon/yellow.png"),
+        },
+        {
+          src: require("../../assets/images/clusterIcon/orange.png"),
+        },
+        {
+          src: require("../../assets/images/clusterIcon/red.png"),
+        },
+      ];
+      // 创建聚簇点
+      dataSourcePromise.then((dataSource) => {
+        // 创建聚合类的点
+        for (let i = 0; i < holeResult.data.data.length; i++) {
+          let lng = Number(holeResult.data.data[i].borelon);
+          let lat = Number(holeResult.data.data[i].borelat);
+          let height = Number(holeResult.data.data[i].boreheight);
+          let label = holeResult.data.data[i].borename;
+          let entity = dataSource.entities.add({
+            id: "hole" + i,
+            position: Cesium.Cartesian3.fromDegrees(lng, lat),
+            billboard: {
+              image: require("../../assets/images/clusterIcon/hole.png"),
+              width: 32, // 宽高必须设置，否则首次无法聚合
+              height: 38,
+              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
+              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+              id: label,
+            },
+          });
+          entity.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+          viewer.flyTo(dataSourcePromise);
+        }
+        // 聚合距离，两个点之间小于这个距离就会聚合
+        const pixelRange = 50;
+        // 每个聚合点的最小个数
+        const minimumClusterSize = 10;
+        // 是否开启聚合
+        const enabled = true;
+        dataSource.clustering.enabled = enabled;
+        dataSource.clustering.pixelRange = pixelRange;
+        dataSource.clustering.minimumClusterSize = minimumClusterSize;
+        let removeListener;
+        function customStyle() {
+          if (Cesium.defined(removeListener)) {
+            removeListener();
+            removeListener = undefined;
+          } else {
+            removeListener =
+              dataSource.clustering.clusterEvent.addEventListener(
+                (clusteredEntities, cluster) => {
+                  let len = clusteredEntities.length;
+                  cluster.label.show = true;
+                  cluster.label.text = len + "";
+                  cluster.label.horizontalOrigin =
+                    Cesium.HorizontalOrigin.CENTER;
+                  cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
+                  cluster.label.disableDepthTestDistance =
+                    Number.POSITIVE_INFINITY;
+                  cluster.label.pixelOffset = new Cesium.Cartesian2(0, -45);
+                  cluster.billboard.show = true;
+                  cluster.billboard.id = cluster.label.id;
+                  cluster.billboard.verticalOrigin =
+                    Cesium.VerticalOrigin.BOTTOM;
+                  cluster.heightReference =
+                    Cesium.HeightReference.CLAMP_TO_GROUND;
+                  if (len >= 100) {
+                    cluster.label.text = "100+";
+                    cluster.label.font = "normal 18px MicroSoft YaHei";
+                    cluster.billboard.image = clusterIcon[4].src; // 聚合效果的背景
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -25);
+                    cluster.billboard.width = 50;
+                    cluster.billboard.height = 50;
+                  } else if (len >= 50) {
+                    cluster.label.font = "normal 30px MicroSoft YaHei";
+                    cluster.billboard.image = clusterIcon[4].src; // 聚合效果的背景
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -25);
+                    cluster.billboard.width = 50;
+                    cluster.billboard.height = 50;
+                  } else if (len >= 40) {
+                    cluster.label.font = "normal 27px MicroSoft YaHei";
+                    cluster.billboard.image = clusterIcon[3].src; // 聚合效果的背景
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -22);
+                    cluster.billboard.width = 45;
+                    cluster.billboard.height = 45;
+                  } else if (len >= 30) {
+                    cluster.label.font = "normal 24px MicroSoft YaHei";
+                    cluster.billboard.image = clusterIcon[2].src; // 聚合效果的背景
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -20);
+                    cluster.billboard.width = 40;
+                    cluster.billboard.height = 40;
+                  } else if (len >= 20) {
+                    cluster.label.font = "normal 20px MicroSoft YaHei";
+                    cluster.billboard.image = clusterIcon[1].src; // 聚合效果的背景
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -17);
+                    cluster.billboard.width = 35;
+                    cluster.billboard.height = 35;
+                  } else {
+                    cluster.label.font = "normal 16px MicroSoft YaHei";
+                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -15);
+                    cluster.billboard.image = clusterIcon[0].src; // 聚合效果的背景
+                    cluster.billboard.width = 30;
+                    cluster.billboard.height = 30;
+                  }
+                }
+              );
+          }
+          // // force a re-cluster with the new styling
+          let pixelRange = dataSource.clustering.pixelRange;
+          dataSource.clustering.pixelRange = 0;
+          dataSource.clustering.pixelRange = pixelRange;
+        }
+        customStyle();
+      });
+      // viewer.zoomTo(dataSourcePromise)
     },
 
     // 判断三维模型是否存在
@@ -880,15 +1168,18 @@ export default {
 
     //复位
     onClickReset() {
-      if (tileSetList.length === 0) return;
-      viewer.flyTo(tileSetList[0].tileSet, {
-        duration: 1,
-        offset: new Cesium.HeadingPitchRange(
-          0.0,
-          -0.5,
-          tileSetList[0].tileSet.boundingSphere.radius * 4.0
-        ),
-      });
+      if (tileSetList.length === 0) {
+        this.flytochina();
+      } else {
+        viewer.flyTo(tileSetList[0].tileSet, {
+          duration: 1,
+          offset: new Cesium.HeadingPitchRange(
+            0.0,
+            -0.5,
+            tileSetList[0].tileSet.boundingSphere.radius * 4.0
+          ),
+        });
+      }
     },
     onClickUnder() {},
 
@@ -928,103 +1219,108 @@ export default {
     // 注册cesium事件
     registerOnclickEvent() {
       if (viewer) {
-        // 注册右键事件
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
-          // If a feature was previously highlighted, undo the highlight
-          if (Cesium.defined(rightClickHighted.feature)) {
-            rightClickHighted.feature.color = rightClickHighted.originalColor;
-            rightClickHighted.feature = undefined;
-          }
+        // // 注册右键事件
+        // handler.setInputAction((movement) => {
+        //   // If a feature was previously highlighted, undo the highlight
+        //   if (Cesium.defined(rightClickHighted.feature)) {
+        //     rightClickHighted.feature.color = rightClickHighted.originalColor;
+        //     rightClickHighted.feature = undefined;
+        //   }
 
-          // Pick a new feature
-          let pickedFeature = viewer.scene.pick(movement.position);
-          if (!Cesium.defined(pickedFeature)) {
-            // this.isLayerDialogVisible = false;
-            return;
-          }
+        //   // Pick a new feature
+        //   let pickedFeature = viewer.scene.pick(movement.position);
+        //   if (!Cesium.defined(pickedFeature)) {
+        //     // this.isLayerDialogVisible = false;
+        //     return;
+        //   }
 
-          //undo the moveFeature Highlight the feature
-          // moveHighlighted.feature.color = moveHighlighted.originalColor;
-          // moveHighlighted.feature = undefined;
+        //   //undo the moveFeature Highlight the feature
+        //   // moveHighlighted.feature.color = moveHighlighted.originalColor;
+        //   // moveHighlighted.feature = undefined;
 
-          rightClickHighted.feature = pickedFeature;
-          Cesium.Color.clone(
-            pickedFeature.color,
-            rightClickHighted.originalColor
-          );
-          pickedFeature.color = Cesium.Color.BLUE;
-          // let pickedFeature = viewer.scene.pick(movement.position);
-          if (Cesium.defined(pickedFeature)) {
-            if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
-              if (
-                pickedFeature.tileset._url ===
-                "3DTiles/drill_3dtiles/tileset.json"
-              ) {
-                let cartesian = viewer.scene.pickPosition(movement.position);
-                let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-                const holecode = pickedFeature.getProperty("钻孔编码");
-                console.log(
-                  pickedFeature.getProperty("孔口标高"),
-                  this.getMdlDegreeCenter(cartographic)[0]
-                );
-                let mhDistance =
-                  pickedFeature.getProperty("孔口标高") -
-                  this.getMdlDegreeCenter(cartographic)[0];
-                console.log(mhDistance);
-                this.$http
-                  .get("/getHoleLayerInfoByHoleCode", {
-                    params: {
-                      holecode: holecode,
-                    },
-                  })
-                  .then((res) => {
-                    this.drillName = holecode;
-                    this.layerInfo = res.data.data;
-                    this.isLayerDialogVisible = true;
-                  });
-              } else if (
-                pickedFeature.tileset._url ===
-                "3DTiles/model_3dtiles/tileset.json"
-              ) {
-                this.tableCommonData = [];
-                let titles = "地层编码";
-                this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
-                let resStr = pickedFeature.getProperty("地层编码");
-                let obj = {
-                  label: titles,
-                  value: resStr,
-                };
-                this.tableCommonData.push(obj);
-                this.isCommonVisible = true;
-              } else {
-                this.tableCommonData = [];
-                let propertyList = pickedFeature.getPropertyNames();
-                for (let i = 0; i < propertyList.length; i++) {
-                  let obj = {
-                    label: propertyList[i],
-                    value: pickedFeature.getProperty(propertyList[i]),
-                  };
-                  this.tableTitleTheme = "地层信息"; //设置表格title sisi
-                  this.tableCommonData.push(obj);
-                  this.isCommonVisible = true;
-                }
-              }
-            } else {
-              Notification({
-                title: "提示",
-                message: "该3dtiles没有属性",
-                duration: "2000",
-              });
-            }
-          }
-        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+        //   rightClickHighted.feature = pickedFeature;
+        //   Cesium.Color.clone(
+        //     pickedFeature.color,
+        //     rightClickHighted.originalColor
+        //   );
+        //   pickedFeature.color = Cesium.Color.BLUE;
+        //   // let pickedFeature = viewer.scene.pick(movement.position);
+        //   if (Cesium.defined(pickedFeature)) {
+        //     if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
+        //       if (
+        //         pickedFeature.tileset._url ===
+        //         "3DTiles/drill_3dtiles/tileset.json"
+        //       ) {
+        //         let cartesian = viewer.scene.pickPosition(movement.position);
+        //         let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+        //         const holecode = pickedFeature.getProperty("钻孔编码");
+        //         console.log(
+        //           pickedFeature.getProperty("孔口标高"),
+        //           this.getMdlDegreeCenter(cartographic)[0]
+        //         );
+        //         let mhDistance =
+        //           pickedFeature.getProperty("孔口标高") -
+        //           this.getMdlDegreeCenter(cartographic)[0];
+        //         console.log(mhDistance);
+        //         this.$http
+        //           .get("/getHoleLayerInfoByHoleCode", {
+        //             params: {
+        //               holecode: holecode,
+        //             },
+        //           })
+        //           .then((res) => {
+        //             this.drillName = holecode;
+        //             this.layerInfo = res.data.data;
+        //             this.isLayerDialogVisible = true;
+        //           });
+        //       } else if (
+        //         pickedFeature.tileset._url ===
+        //         "3DTiles/model_3dtiles/tileset.json"
+        //       ) {
+        //         this.tableCommonData = [];
+        //         let titles = "地层编码";
+        //         this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
+        //         let resStr = pickedFeature.getProperty("地层编码");
+        //         let obj = {
+        //           label: titles,
+        //           value: resStr,
+        //         };
+        //         this.tableCommonData.push(obj);
+        //         this.isCommonVisible = true;
+        //       } else {
+        //         this.tableCommonData = [];
+        //         let propertyList = pickedFeature.getPropertyNames();
+        //         for (let i = 0; i < propertyList.length; i++) {
+        //           let obj = {
+        //             label: propertyList[i],
+        //             value: pickedFeature.getProperty(propertyList[i]),
+        //           };
+        //           this.tableTitleTheme = "地层信息"; //设置表格title sisi
+        //           this.tableCommonData.push(obj);
+        //           this.isCommonVisible = true;
+        //           console.log("右键查询");
+        //         }
+        //       }
+        //     } else {
+        //       Notification({
+        //         title: "提示",
+        //         message: "该3dtiles没有属性",
+        //         duration: "2000",
+        //       });
+        //     }
+        //   }
+        // }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
 
+        let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         // 注册左键事件
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        handler.setInputAction((movement) => {
           clearTimeout(this.flagTimer);
           this.flagTimer = window.setTimeout(() => {
+            this.setFeatureColor(moveHighlighted, undefined);
+            if (this.get3DTilesFeature(movement) > -1) return;
             let pick = viewer.scene.pick(movement.position);
 
+            console.log("钻孔查询");
             //获取钻孔信息
             if (Cesium.defined(pick) && Cesium.defined(pick.id)) {
               this.$http
@@ -1089,41 +1385,25 @@ export default {
               }
             }
           }, 200);
+          console.log("左键查询");
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //注册移动事件
-        // viewer.screenSpaceEventHandler.setInputAction((movement) => {
-        //   // 移动变小手
-        //   const moveFeature = viewer.scene.pick(movement.endPosition);
-        //   if (Cesium.defined(moveFeature)) {
-        //     viewer._container.style.cursor = "pointer";
-        //   } else {
-        //     viewer._container.style.cursor = "default";
-        //   }
-        //   return;
-        //   // If a feature was previously highlighted, undo the highlight
-        //   if (Cesium.defined(moveHighlighted.feature)) {
-        //     moveHighlighted.feature.color = moveHighlighted.originalColor;
-        //     moveHighlighted.feature = undefined;
-        //   }
+        handler.setInputAction((movement) => {
+          // 移动变小手
+          const moveFeature = viewer.scene.pick(movement.endPosition);
+          this.setFeatureColor(moveHighlighted, moveFeature);
+          if (Cesium.defined(moveFeature)) {
+            viewer._container.style.cursor = "pointer";
+            //十字 crosshair
+          } else {
+            viewer._container.style.cursor = "default";
+            return;
+          }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-        //   // Pick a new feature
-        //   let pickedFeature = viewer.scene.pick(movement.endPosition);
-        //   if (!Cesium.defined(pickedFeature)) {
-        //     return;
-        //   }
-
-        //   // Highlight the feature
-        //   moveHighlighted.feature = pickedFeature;
-        //   Cesium.Color.clone(
-        //     pickedFeature.color,
-        //     moveHighlighted.originalColor
-        //   );
-        //   pickedFeature.color = Cesium.Color.YELLOW;
-        // }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-        
         // 注册双击事件（注意区分单击和双击事件）
-        viewer.screenSpaceEventHandler.setInputAction((movement) => {
+        handler.setInputAction((movement) => {
           clearTimeout(this.flagTimer);
           if (this.activeDoubleEvent) {
             let pick = viewer.scene.pick(movement.position);
@@ -1226,9 +1506,103 @@ export default {
               this.isvirtualLayerDialogVisible = true;
             }
           }
+          console.log("双击左键");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
       }
     },
+
+    //获取3dtiles 的feature
+    get3DTilesFeature(movement) {
+      // If a feature was previously highlighted, undo the highlight
+      if (Cesium.defined(rightClickHighted.feature)) {
+        rightClickHighted.feature.color = rightClickHighted.originalColor;
+        rightClickHighted.feature = undefined;
+      }
+
+      // Pick a new feature
+      let pickedFeature = viewer.scene.pick(movement.position);
+      if (!Cesium.defined(pickedFeature)) {
+        // this.isLayerDialogVisible = false;
+        return -1;
+      }
+
+      //undo the moveFeature Highlight the feature
+      // moveHighlighted.feature.color = moveHighlighted.originalColor;
+      // moveHighlighted.feature = undefined;
+
+      rightClickHighted.feature = pickedFeature;
+      Cesium.Color.clone(pickedFeature.color, rightClickHighted.originalColor);
+      console.log("pickedFeature:", pickedFeature);
+      console.log("rightClickHighted:", rightClickHighted);
+      pickedFeature.color = Cesium.Color.BLUE;
+      // let pickedFeature = viewer.scene.pick(movement.position);
+      if (Cesium.defined(pickedFeature)) {
+        if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
+          if (
+            pickedFeature.tileset._url === "3DTiles/drill_3dtiles/tileset.json"
+          ) {
+            let cartesian = viewer.scene.pickPosition(movement.position);
+            let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+            const holecode = pickedFeature.getProperty("钻孔编码");
+            console.log(
+              pickedFeature.getProperty("孔口标高"),
+              this.getMdlDegreeCenter(cartographic)[0]
+            );
+            let mhDistance =
+              pickedFeature.getProperty("孔口标高") -
+              this.getMdlDegreeCenter(cartographic)[0];
+            console.log(mhDistance);
+            this.$http
+              .get("/getHoleLayerInfoByHoleCode", {
+                params: {
+                  holecode: holecode,
+                },
+              })
+              .then((res) => {
+                this.drillName = holecode;
+                this.layerInfo = res.data.data;
+                this.isLayerDialogVisible = true;
+              });
+          } else if (
+            pickedFeature.tileset._url === "3DTiles/model_3dtiles/tileset.json"
+          ) {
+            this.tableCommonData = [];
+            let titles = "地层编码";
+            this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
+            let resStr = pickedFeature.getProperty("地层编码");
+            let obj = {
+              label: titles,
+              value: resStr,
+            };
+            this.tableCommonData.push(obj);
+            this.isCommonVisible = true;
+          } else {
+            this.tableCommonData = [];
+            let propertyList = pickedFeature.getPropertyNames();
+            for (let i = 0; i < propertyList.length; i++) {
+              let obj = {
+                label: propertyList[i],
+                value: pickedFeature.getProperty(propertyList[i]),
+              };
+              this.tableTitleTheme = "地层信息"; //设置表格title sisi
+              this.tableCommonData.push(obj);
+              this.isCommonVisible = true;
+            }
+          }
+          return 1;
+        }
+        // else {
+        //   Notification({
+        //     title: "提示",
+        //     message: "该3dtiles没有属性",
+        //     duration: "2000",
+        //   });
+        //   return 0;
+        // }
+      }
+      return -1;
+    },
+
     // 绘制线
     drawLine(leftPoint, secPoint, color) {
       viewer.entities.add({
@@ -1300,6 +1674,24 @@ export default {
           data.nodeData.layers,
           data.isChecked
         );
+      } else if (data.nodeData.serviceType === "Google") {
+        this.loadUTLayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
+      } else if (data.nodeData.serviceType === "ESRI") {
+        this.loadESRILayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
+      } else if (data.nodeData.serviceType === "OSM") {
+        this.loadOSMLayer(
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
       } else if (data.nodeData.serviceType === "wfs") {
         this.loadWfsLayer(
           data.nodeData.url,
@@ -1321,11 +1713,19 @@ export default {
           data.isChecked
         );
       } else if (data.nodeData.serviceType === "billboards") {
+        console.log("加载billboards");
         this.loadHoleLayer(
           data.nodeData.url,
           data.nodeData.name,
           data.isChecked
         );
+        // this.getDataSource(
+        //   data.nodeData.url,
+        //   data.nodeData.name,
+        //   data.isChecked
+        // );
+      } else if (data.nodeData.serviceType === "地形服务") {
+        this.loadTerrain_2(data.nodeData.url, data.isChecked);
       }
     },
     // 接收三维服务
@@ -1341,27 +1741,75 @@ export default {
     },
     // 接收通用组件传递过来的值
     commonToolHandleOnClick(item) {
+      if (!viewer) return;
       switch (item.index) {
         case 1:
-          if (viewer) {
-            viewer.scene.globe.show = !viewer.scene.globe.show;
-          }
+          CesiumUtils.viewCesiumUtils().taggleEarthShow(viewer);
           break;
         case 2:
-          if (viewer) {
-            viewer.scene.screenSpaceCameraController.enableCollisionDetection =
-              !viewer.scene.screenSpaceCameraController
-                .enableCollisionDetection;
-          }
+          CesiumUtils.viewCesiumUtils().taggleUnderSpace(viewer);
           break;
         case 3:
-          if (viewer) {
-            this.onClickReset();
-          }
+          CesiumUtils.viewCesiumUtils().resetView(
+            viewer,
+            113.805972,
+            27.664014,
+            8000000.0
+          );
           break;
+        case 4:
+          CesiumUtils.viewCesiumUtils().zoomOut(viewer);
+          break;
+        case 5:
+          CesiumUtils.viewCesiumUtils().zoomIn(viewer);
+          break;
+        case 6:
+          CesiumUtils.viewCesiumUtils().taggleFullScreen(item.active);
+
+          break;
+        case 7:
+          CesiumUtils.viewCesiumUtils().zoomOut(viewer);
+
+          break;
+
         default:
           break;
       }
+    },
+    /**
+     *  初始定位中国
+     * */
+    flytochina() {
+      // viewer.camera.flyTo({
+      //     destination: Cesium.Cartesian3.fromDegrees(116.435314, 40.960521, 10000000.0),
+      //     duration: 8
+      // });
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          110.435314,
+          40.960521,
+          80000000.0
+        ),
+        orientation: {
+          heading: Cesium.Math.toRadians(20), //代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
+          pitch: Cesium.Math.toRadians(-95), //代表镜头上下方向,正值为上,负值为下.
+          roll: Cesium.Math.toRadians(-20), //代表镜头左右倾斜.正值,向右倾斜,负值向左倾斜
+        },
+        complete: function callback() {
+          // 定位完成之后的回调函数
+        },
+      });
+      // let initialPosition = Cesium.Cartesian3.fromDegrees(110.435314, 40.960521, 500000.0 );
+      // let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+      //   21.27879878293835,
+      //   -21.34390550872461,
+      //   0.0716951918898415
+      // );
+      // viewer.scene.camera.setView({
+      //   destination: initialPosition,
+      //   orientation: initialOrientation,
+      //   endTransform: Cesium.Matrix4.IDENTITY,
+      // });
     },
     receptWifeinfo(val) {
       for (let i = 0; i < tileSetList.length; i++) {
@@ -1380,8 +1828,22 @@ export default {
       }
     },
     receptAlphaInfo(alpha) {
+      console.log(alpha);
       viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
         Cesium.Math.clamp(alpha, 0.0, 1.0);
+    },
+    receptImageryAlpha(alpha) {
+      console.log("图层透明度");
+      for (let i = 0; i < imageryLayers._layers.length; i++) {
+        if (
+          imageryLayers._layers[i].imageryProvider.name !== "tdtCiaLayer" &&
+          imageryLayers._layers[i].imageryProvider.name !== "vecTypeESRICOC" &&
+          imageryLayers._layers[i].imageryProvider.name !== "vecTypeOSM" &&
+          imageryLayers._layers[i].imageryProvider.name !== "imgTypeESRIMap"
+        ) {
+          imageryLayers._layers[i].alpha = alpha;
+        }
+      }
     },
     async receptSearchInfo(item) {
       // 是否加载钻孔并显示
@@ -1496,6 +1958,161 @@ export default {
           console.log(this.$x2js.xml2js(res.data)); // 将xml解析成json格式，获取所有图层
         });
     },
+    loadTerrain() {
+      console.log(
+        "viewer.scene.terrainProvider:",
+        viewer.scene.terrainProvider
+      );
+      if (viewer.scene.terrainProvider.hasWaterMask) {
+        let terrain = new Cesium.EllipsoidTerrainProvider();
+        viewer.terrainProvider = terrain;
+      } else {
+        let terrain = new Cesium.createWorldTerrain({
+          requestWaterMask: true,
+          requestVertexNormals: true,
+        });
+        viewer.terrainProvider = terrain;
+      }
+    },
+    // 加载地形
+    loadTerrain_2(url, isChecked) {
+      const scene = viewer.scene;
+      let terrainProvider = null;
+      if (!isChecked) {
+        terrainProvider = new Cesium.EllipsoidTerrainProvider({});
+      } else {
+        // terrainProvider = new Cesium.CesiumTerrainProvider({
+        //   url: url,
+        //   requestWaterMask: true,
+        // });
+        terrainProvider = new Cesium.createWorldTerrain({
+          requestWaterMask: true,
+          requestVertexNormals: true,
+        });
+        console.log(terrainProvider);
+      }
+      scene.terrainProvider = terrainProvider;
+    },
+
+    /**
+     * 拾取屏幕像素位置的cesium要素，并判断是什么类型(支持：Entity Cesium3DTileset Billboard Primitive)
+     * @param x
+     * @param y
+     * @param feature 获取到的对象
+     * @returns {*}
+     */
+    pickFeatureFromScreen(feature) {
+      let resp = {
+        pickResult: null,
+      };
+      // let pickCartesian2 = new Cesium.Cartesian2(x, y)
+      // let feature = viewer.scene.pick(pickCartesian2);
+      if (Cesium.defined(feature)) {
+        // feature.primitive.constructor.name 也可以获取类型
+        resp.pickResult = feature; // 拾取结果
+        if (
+          feature.hasOwnProperty("id") &&
+          feature.id instanceof Cesium.Entity
+        ) {
+          // entity: {collection, id, primitive}
+          resp.type = "Entity";
+          resp.detailType = feature.primitive.constructor.name;
+          resp.entity = feature.id;
+          resp.primitive = feature.primitive;
+        } else if (feature.primitive instanceof Cesium.Cesium3DTileset) {
+          // 3DTile: {content, primitive}
+          resp.type = "Cesium3DTileset";
+        } else if (feature.primitive instanceof Cesium.Billboard) {
+          // primitive-billboard: {collection, id, primitive}
+          resp.type = "Billboard";
+          resp.id = feature.id;
+          resp.billboardCollection = feature.collection;
+          resp.billboard = feature.primitive;
+        } else if (feature.primitive instanceof Cesium.Primitive) {
+          // primitive: { primitive}
+          resp.type = "Primitive";
+          resp.primitive = feature.primitive;
+        } else if (feature.primitive instanceof Cesium.Model) {
+          // primitive: { primitive}
+          resp.type = "Primitive";
+          resp.detailType = "Model";
+          resp.primitive = feature.primitive;
+        }
+      }
+      return resp;
+    },
+
+    /**
+     * @param HightedFeatureObj 已经高亮的feature对象
+     * @param currentFeature 当前feature
+     */
+    setFeatureColor(HightedFeatureObj, currentFeature) {
+      if (Cesium.defined(HightedFeatureObj.feature)) {
+        // if(HightedFeatureObj.type === "Entity"){
+        // }else if(HightedFeatureObj.type === "Cesium3DTileset"){
+        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        //   HightedFeatureObj.feature = undefined;
+        //   HightedFeatureObj.type = undefined;
+        // }else if(HightedFeatureObj.type === "Billboard"){
+        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        //   HightedFeatureObj.feature = undefined;
+        //   HightedFeatureObj.type = undefined;
+        // }else if(HightedFeatureObj.type === "Primitive"){
+
+        // }
+        HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        HightedFeatureObj.feature = undefined;
+        HightedFeatureObj.type = undefined;
+        HightedFeatureObj.originalColor = new Cesium.Color(0, 0, 0, 0);
+      }
+
+      if (!Cesium.defined(currentFeature)) return;
+      let pickResult = this.pickFeatureFromScreen(currentFeature);
+      if (pickResult.type === "Entity") {
+        if (!pickResult.entity.model) {
+          //说明不是entity 莫得model对象
+          HightedFeatureObj.feature = pickResult.primitive;
+          HightedFeatureObj.type = pickResult.type;
+          Cesium.Color.clone(
+            pickResult.primitive.color,
+            HightedFeatureObj.originalColor
+          );
+          currentFeature.primitive.color = Cesium.Color.ORANGERED;
+        } else {
+          HightedFeatureObj.feature = pickResult.entity.model;
+          HightedFeatureObj.type = pickResult.type;
+          Cesium.Color.clone(
+            pickResult.entity.model.color,
+            HightedFeatureObj.originalColor
+          );
+          pickResult.entity.model.color = Cesium.Color.ORANGERED;
+        }
+      } else if (pickResult.type === "Cesium3DTileset") {
+        HightedFeatureObj.feature = pickResult.pickResult;
+        HightedFeatureObj.type = pickResult.type;
+        Cesium.Color.clone(
+          pickResult.pickResult.color,
+          HightedFeatureObj.originalColor
+        );
+        currentFeature.color = Cesium.Color.ORANGERED;
+      } else if (pickResult.type === "Billboard") {
+        HightedFeatureObj.feature = pickResult.billboard;
+        HightedFeatureObj.type = pickResult.type;
+        Cesium.Color.clone(
+          pickResult.billboard.color,
+          HightedFeatureObj.originalColor
+        );
+        pickResult.billboard.color = Cesium.Color.ORANGERED;
+      } else if (pickResult.type === "Primitive") {
+        HightedFeatureObj.feature = pickResult.primitive;
+        HightedFeatureObj.type = pickResult.type;
+        Cesium.Color.clone(
+          pickResult.primitive.color,
+          HightedFeatureObj.originalColor
+        );
+        currentFeature.primitive.color = Cesium.Color.ORANGERED;
+      }
+    },
 
     onMessageFromComponent() {},
     destroyMessage() {},
@@ -1509,6 +2126,7 @@ export default {
     this.registerOnclickEvent();
     // let a = CesiumUtils.drawUtils(viewer);
     // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);
+    eventVue.$emit("sendCesiumViewer", viewer);
   },
   beforeDestroy() {
     this.destroyMessage();

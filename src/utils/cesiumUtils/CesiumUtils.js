@@ -13,7 +13,7 @@ export default class CesiumUtils {
     constructor() {
     }
     static viewCesiumUtils() {
-        return new ViewCesiumUtils();
+        return ViewCesiumUtils;
     }
     static drawUtils(viewer) {
         return new DrawUtils(viewer)

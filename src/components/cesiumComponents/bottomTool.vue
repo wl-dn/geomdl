@@ -34,7 +34,18 @@
       </span>
     </div>
     <div class="slidebox">
-      <span class="demonstration">地表透明</span>
+      <span class="demonstration">地图服务透明度</span>
+      <el-slider
+        v-model="imageryAlpha"
+        :show-tooltip="false"
+        :max="1"
+        :min="0"
+        :step="0.05"
+        @input="changeImageryAlphaOnInput"
+      ></el-slider>
+    </div>
+    <div class="slidebox1">
+      <span class="demonstration1">地表透明</span>
       <el-slider
         v-model="slideValue"
         :show-tooltip="false"
@@ -64,17 +75,19 @@ export default {
       },
       isActiveSpan: true,
       slideValue: 1,
+      imageryAlpha: 1,
     };
   },
   methods: {
     moveShowInfo(viewer) {
-      viewer.screenSpaceEventHandler.setInputAction((movement) => {
-        const moveFeature = viewer.scene.pick(movement.endPosition);
-        if (Cesium.defined(moveFeature)) {
-          viewer._container.style.cursor = "pointer";
-        } else {
-          viewer._container.style.cursor = "default";
-        }
+      let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction((movement) => {
+        // const moveFeature = viewer.scene.pick(movement.endPosition);
+        // if (Cesium.defined(moveFeature)) {
+        //   viewer._container.style.cursor = "pointer";
+        // } else {
+        //   viewer._container.style.cursor = "default";
+        // }
 
         const pick = new Cesium.Cartesian2(
           movement.endPosition.x,
@@ -120,6 +133,9 @@ export default {
     },
     changeAlphaOnInput(val) {
       this.$emit("sendAlphaInfo", val);
+    },
+    changeImageryAlphaOnInput(val) {
+      this.$emit("sendImageryAlpha", val);
     },
   },
   created() {
@@ -179,6 +195,14 @@ export default {
 }
 .slidebox {
   position: absolute;
+  right: 500px;
+  bottom: 0px;
+  width: 200px;
+  height: 30px;
+  line-height: 30px;
+}
+.slidebox1 {
+  position: absolute;
   right: 100px;
   bottom: 0px;
   width: 200px;
@@ -186,6 +210,15 @@ export default {
   line-height: 30px;
 }
 .demonstration {
+  display: inline-block;
+  height: 30px;
+  position: absolute;
+  color: white;
+  left: -110px;
+  line-height: 30px;
+  top: 3px;
+}
+.demonstration1 {
   display: inline-block;
   height: 30px;
   position: absolute;

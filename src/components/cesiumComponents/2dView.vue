@@ -13,7 +13,7 @@
       :data="treeData"
       show-checkbox
       node-key="id"
-      :default-expanded-keys="['1', '2', '3', '4', '5', '6']"
+      :default-expanded-keys="['1', '2', '3', '4', '5', '6','7','8']"
       @check-change="handleCheckChange"
       @check="handleCheck"
       @node-contextmenu="handleContextMenu"
@@ -317,18 +317,18 @@ export default {
         // },
         {
           id: "6",
-          label: "地形影像",
+          label: "影像服务",
           children: [
-            {
-              id: "6-1",
-              label: "天地图影像",
-              name: "TDMap",
-              url:
-                "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
-                this.tiandituTk,
-              layers: "tdtImgLayer",
-              serviceType: "天地图",
-            },
+            // {
+            //   id: "6-1",
+            //   label: "天地图影像",
+            //   name: "TDMap",
+            //   url:
+            //     "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
+            //     this.tiandituTk,
+            //   layers: "tdtImgLayer",
+            //   serviceType: "天地图",
+            // },
             {
               id: "6-2",
               label: "天地图注记",
@@ -339,12 +339,59 @@ export default {
               layers: "tdtCiaLayer",
               serviceType: "天地图",
             },
+            // {
+            //   id: "6-3",
+            //   label: "谷歌影像",
+            //   url:
+            //     "http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}",
+            //   name: "GoogleUTMap",
+            //   layers: "imgTypeGoogle",
+            //   serviceType: "Google",
+            // },
+            // {
+            //   id: "6-4",
+            //   label: "ESRI影像",
+            //   url:
+            //     "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
+            //   name: "ESRIMap",
+            //   layers: "imgTypeESRIMap",
+            //   serviceType: "ESRI",
+            // },
+            {
+              id: "6-5",
+              label: "ESRI街道图",
+              url: "http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer",
+              name: "ESRIMapCOC",
+              layers: "vecTypeESRICOC",
+              serviceType: "ESRI",
+            },
+            {
+              id: "6-6",
+              label: "OSM",
+              url: "https://a.tile.openstreetmap.org/",
+              name: "OSMMap",
+              layers: "vecTypeOSM",
+              serviceType: "OSM",
+            },
           ],
         },
         {
           id: "7",
+          label: "地形服务",
+          children: [
+            {
+              id: "7-1",
+              label:"赣州段地形",
+              url: "http://192.10.3.237:81/tsyTerrain/",
+              serviceType: "地形服务",
+            },
+          ],
+        },
+        {
+          id: "8",
           label: "钻孔",
           url: "/getAllHoleInfo",
+          // url: "holeinfo.json",
           name: "holeLayer",
           layer: "",
           serviceType: "billboards",

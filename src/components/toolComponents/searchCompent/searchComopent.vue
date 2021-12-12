@@ -68,8 +68,11 @@
       <span v-show="isShowSearchBox === true" @click="isShowSearchBox = false"
         >《《</span
       >
-      <span v-show="isShowSearchBox === false" @click="isShowSearchBox = true"
-        >》》</span
+      <span
+        v-show="isShowSearchBox === false"
+        @click="isShowSearchBox = true"
+        class="el-icon-search"
+        ></span
       >
     </div>
   </div>
@@ -195,7 +198,7 @@ export default {
   height: 320px;
   width: 600px;
   background-color: cadetblue;
-  margin-top: 100px; /*sisi  缩小高度 */ 
+  margin-top: 100px; /*sisi  缩小高度 */
 }
 .searchSubBox {
   position: absolute;
@@ -261,7 +264,7 @@ export default {
 }
 
 .searchResultBox {
-  width: 600px;
+  width: 500px;
   position: absolute;
   top: 331px;
   left: 31px;
@@ -330,8 +333,10 @@ export default {
   margin-right: 100px; /*sisi  */
 }
 .closeDialog_box > span:nth-child(2) {
-  top: 40px;
+  top: 32px;
   padding-bottom: 4px;
+  font-size: 30px;
+  background: none;
   /* right: -66px; */
   cursor: pointer;
 }
