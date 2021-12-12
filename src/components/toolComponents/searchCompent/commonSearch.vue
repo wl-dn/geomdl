@@ -79,6 +79,23 @@
       <div v-show="radio == 3">
         <div class="spaceSearchBox">
           <div>
+            <span>图层选择</span>
+            <el-select
+              v-model="layerSelectValue2"
+              placeholder="请选择图层"
+              @change="layerSelectOnChange2"
+              clearable
+            >
+              <el-option
+                v-for="item in layerOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              >
+              </el-option>
+            </el-select>
+          </div>
+          <div>
             <span>空间位置</span>
             <el-select
               v-model="spaceSelectValue"
@@ -330,6 +347,7 @@ export default {
         },
       ],
       layerSelectValue: "",
+      layerSelectValue2: "",
       fieldSelectValue: "",
       fieldValue: "",
       spaceSelectValue: "1",
@@ -492,6 +510,8 @@ export default {
         }
         this.fieldOptions = resultData;
       });
+    },
+    layerSelectOnChange2(val) {
     },
     fieldSelectOnChange(val) {},
 
@@ -674,11 +694,16 @@ export default {
 
 /* 空间检索 */
 .spaceSearchBox {
-  margin: 20px 0 0 20px;
+  margin: 5px 0 0 20px;
 }
 .spaceSearchBox > div:nth-child(1) .el-select {
   margin-left: 20px;
   width: 236px; /**sisi */
+}
+.spaceSearchBox > div:nth-child(2) .el-select {
+  margin-left: 20px;
+  width: 236px; /**sisi */
+  margin-top:5px;
 }
 .spaceSearchBox .spaceSearchTool_box {
   margin-top: 20px;
@@ -722,7 +747,7 @@ export default {
   margin-left: 0px; /**sisi */
 }
 .spaceSearchTool_box_3 > div {
-  margin-top: 10px;
+  margin-top: 0px;
   padding-bottom: 5px;
   border-bottom: 1px dashed rgb(195, 198, 202);
 }

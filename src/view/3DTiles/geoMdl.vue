@@ -136,6 +136,7 @@ let imageryLayers = null;
 let moveHighlighted = {
   feature: undefined,
   originalColor: new Cesium.Color(),
+  type:undefined,
 };
 let rightClickHighted = {
   feature: undefined,
@@ -324,7 +325,7 @@ export default {
         baseLayerPicker: showWedgit, // 底图切换控件
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
-        infoBox: true, //是否显示信息框
+        infoBox: false, //是否显示信息框
 
         // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
@@ -596,13 +597,13 @@ export default {
       let kmlOptions = {
         camera: viewer.scene.camera,
         canvas: viewer.scene.canvas,
-        // clampToGround: true, // 开启贴地
+        clampToGround: true, // 开启贴地
       };
       let geocachePromise = Cesium.KmlDataSource.load(url, kmlOptions);
       geocachePromise.then((dataSource) => {
+        viewer.flyTo(geocachePromise);
         dataSource.name = name;
         viewer.dataSources.add(dataSource);
-        viewer.flyTo(dataSource.entities);
       });
     },
     selectOnMdlchange(val) {
@@ -1281,11 +1282,12 @@ export default {
         let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         // 注册左键事件
         handler.setInputAction((movement) => {
+          this.setFeatureColor(moveHighlighted,undefined);
           if(this.get3DTilesFeature(movement)>-1) return;
           clearTimeout(this.flagTimer);
-          this.flagTimer = window.setTimeout(() => {
             let pick = viewer.scene.pick(movement.position);
 
+            console.log("钻孔查询");
             //获取钻孔信息
             if (Cesium.defined(pick) && Cesium.defined(pick.id)) {
               this.$http
@@ -1349,7 +1351,6 @@ export default {
                 }
               }
             }
-          }, 200);
           console.log("左键查询");
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
@@ -1357,6 +1358,7 @@ export default {
         handler.setInputAction((movement) => {
           // 移动变小手
           const moveFeature = viewer.scene.pick(movement.endPosition);
+          this.setFeatureColor(moveHighlighted,moveFeature);
           if (Cesium.defined(moveFeature)) {
             viewer._container.style.cursor = "pointer";
             //十字 crosshair
@@ -1364,14 +1366,6 @@ export default {
             viewer._container.style.cursor = "default";
             return;
           }
-          console.log("moveFeature:",this.pickFeatureFromScreen(moveFeature));
-          // Highlight the feature
-          moveHighlighted.feature = moveFeature;
-          Cesium.Color.clone(
-            moveFeature.color,
-            moveHighlighted.originalColor
-          );
-          moveFeature.color = Cesium.Color.BLUE;
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
         
         // 注册双击事件（注意区分单击和双击事件）
@@ -1961,6 +1955,7 @@ export default {
                 resp.type = 'Entity'
                 resp.detailType = feature.primitive.constructor.name
                 resp.entity = feature.id
+                resp.primitive = feature.primitive
             } else if (feature.primitive instanceof Cesium.Cesium3DTileset) {
                 // 3DTile: {content, primitive}
                 resp.type = 'Cesium3DTileset'
@@ -1990,15 +1985,70 @@ export default {
      */
     setFeatureColor(HightedFeatureObj,currentFeature){
       if (Cesium.defined(HightedFeatureObj.feature)) {
+        // if(HightedFeatureObj.type === "Entity"){
+        // }else if(HightedFeatureObj.type === "Cesium3DTileset"){
+        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        //   HightedFeatureObj.feature = undefined;
+        //   HightedFeatureObj.type = undefined;
+        // }else if(HightedFeatureObj.type === "Billboard"){
+        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
+        //   HightedFeatureObj.feature = undefined;
+        //   HightedFeatureObj.type = undefined;
+        // }else if(HightedFeatureObj.type === "Primitive"){
+          
+        // }
         HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
         HightedFeatureObj.feature = undefined;
+        HightedFeatureObj.type = undefined;
+        HightedFeatureObj.originalColor = new Cesium.Color(0,0,0,0);
       }
-      let pickResult = this.pickFeatureFromScreen(feature);
-      if (pickResult) {
-        
-      } else {
-        
-      }
+
+      if (!Cesium.defined(currentFeature)) return;
+      let pickResult = this.pickFeatureFromScreen(currentFeature);
+        if(pickResult.type === "Entity"){
+          if (!pickResult.entity.model) {  //说明不是entity 莫得model对象
+            HightedFeatureObj.feature = pickResult.primitive;
+            HightedFeatureObj.type = pickResult.type;
+            Cesium.Color.clone(
+              pickResult.primitive.color,
+              HightedFeatureObj.originalColor
+            );
+            currentFeature.primitive.color = Cesium.Color.ORANGERED;  
+          }else{
+            HightedFeatureObj.feature = pickResult.entity.model;
+            HightedFeatureObj.type = pickResult.type;
+            Cesium.Color.clone(
+              pickResult.entity.model.color,
+              HightedFeatureObj.originalColor
+            );
+            pickResult.entity.model.color = Cesium.Color.ORANGERED;  
+          }
+        }else if(pickResult.type === "Cesium3DTileset"){
+          console.log("3dtiles");
+          HightedFeatureObj.feature = pickResult.pickResult;
+          HightedFeatureObj.type = pickResult.type;
+          Cesium.Color.clone(
+            pickResult.pickResult.color,
+            HightedFeatureObj.originalColor
+          );
+          currentFeature.color = Cesium.Color.ORANGERED;  
+        }else if(pickResult.type === "Billboard"){
+          HightedFeatureObj.feature = pickResult.billboard;
+          HightedFeatureObj.type = pickResult.type;
+          Cesium.Color.clone(
+            pickResult.billboard.color,
+            HightedFeatureObj.originalColor
+          );
+          pickResult.billboard.color = Cesium.Color.ORANGERED;
+        }else if(pickResult.type === "Primitive"){
+            HightedFeatureObj.feature = pickResult.primitive;
+            HightedFeatureObj.type = pickResult.type;
+            Cesium.Color.clone(
+              pickResult.primitive.color,
+              HightedFeatureObj.originalColor
+            );
+            currentFeature.primitive.color = Cesium.Color.ORANGERED; 
+        }
     },
 
     onMessageFromComponent() {},
