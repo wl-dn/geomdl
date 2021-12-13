@@ -330,6 +330,7 @@ export default {
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
         infoBox: false, //是否显示信息框
+        selectionIndicator:false, //关闭绿色选中框
 
         // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
         // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
@@ -397,13 +398,13 @@ export default {
       mdlScene.globe.translucency.frontFaceAlphaByDistance =
         new Cesium.NearFarScalar(1000.0, 1, 1000000.0, 1);
 
-      // 将三维球定位到中国
-      CesiumUtils.viewCesiumUtils().resetView(
-        viewer,
-        113.805972,
-        27.664014,
-        8000000.0
-      );
+      // // 将三维球定位到中国
+      // CesiumUtils.viewCesiumUtils().resetView(
+      //   viewer,
+      //   113.805972,
+      //   27.664014,
+      //   8000000.0
+      // );
     },
 
     // 加载wms服务
@@ -430,14 +431,14 @@ export default {
         console.log("定位");
         if (imageryLayers) {
           let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
-          // console.log(imgLayer.rectangle);
-          // viewer.flyTo(imgLayer);
-          imgLayer.getViewableRectangle().then(function (rectangle) {
-            console.log(rectangle);
-            return camera.flyTo({
-              destination: rectangle,
-            });
-          });
+          this.getGeoServerWmsBoundingBox(url);
+          // // viewer.flyTo(imgLayer);
+          // imgLayer.getViewableRectangle().then(function (rectangle) {
+          //   console.log(rectangle);
+          //   return camera.flyTo({
+          //     destination: rectangle,
+          //   });
+          // });
         }
       }
     },
@@ -575,7 +576,7 @@ export default {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
         });
-        viewer.zoomTo(acrgisImagelayer);
+        // viewer.zoomTo(acrgisImagelayer);
         if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
       }
     },
@@ -745,13 +746,24 @@ export default {
           endTransform: Cesium.Matrix4.IDENTITY,
         });
       } else {
-        CesiumUtils.viewCesiumUtils().resetView(
-          viewer,
+        let initialPosition = Cesium.Cartesian3.fromDegrees(
           tempParams.longitude,
-          tempParams.latitude,
-          203172.52,
-          355.46,
-          -90
+          tempParams.latitude-0.0005,
+          tempParams.height+50000
+        );
+        let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+          357.27879878293835,
+          -21.34390550872461,
+          0.0716951918898415
+        );
+        // viewer.scene.camera.setView({
+        //   destination: initialPosition,
+        //   orientation: initialOrientation,
+        //   endTransform: Cesium.Matrix4.IDENTITY,
+        // });
+        viewer.zoomTo(
+          tileSet,
+          initialOrientation
         );
         CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
         // viewer.zoomTo(
@@ -2042,7 +2054,7 @@ export default {
       return resp;
     },
 
-    /**
+    /**重置上一次鼠标移动高亮的元素并设置当前获取到的feature的高亮
      * @param HightedFeatureObj 已经高亮的feature对象
      * @param currentFeature 当前feature
      */
@@ -2114,6 +2126,36 @@ export default {
       }
     },
 
+    /**获取geoserver的wms范围
+     * @param url wms服务地址
+     */
+    getGeoServerWmsBoundingBox(url){
+      this.$http
+        .get(url+'?service=wms&version=1.1.1&request=GetCapabilities&&outputFormat=application/json')
+        .then((res) => {
+          let aa = this.$x2js.xml2js(res.data)
+          let boxExtent = aa.WMT_MS_Capabilities.Capability.Layer.LatLonBoundingBox;
+          if(!boxExtent) return;
+          console.log(boxExtent);
+          let rectangle = Cesium.Rectangle.fromDegrees(
+            Number(boxExtent._minx),
+            Number(boxExtent._miny),
+            Number(boxExtent._maxx),
+            Number(boxExtent._maxy)
+          );
+          viewer.camera.setView({
+            destination: rectangle,
+          });
+        });
+      // success: function (xmlResult) {
+      //     $(xmlResult).find("Layer").find("Layer").each(function() {
+      //         var item = $(this);
+      //         if(item.find("Name").text()==layers.split(":")[1]){
+      //             mapHelper.map.getView().fit(ol.proj.transformExtent([Number(item.find("BoundingBox").attr("minx")), Number(item.find("BoundingBox").attr("miny")), Number(item.find("BoundingBox").attr("maxx")), Number(item.find("BoundingBox").attr("maxy"))], item.find("BoundingBox").attr("SRS"), item.find("BoundingBox").attr("SRS")), { duration: 300 })
+      //         }
+      //     });
+      // }
+    },
     onMessageFromComponent() {},
     destroyMessage() {},
   },
@@ -2127,6 +2169,7 @@ export default {
     // let a = CesiumUtils.drawUtils(viewer);
     // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);
     eventVue.$emit("sendCesiumViewer", viewer);
+    // this.getGeoServerWmsBoundingBox("http://192.10.3.237/geoserver/crcc-dev/wms");
   },
   beforeDestroy() {
     this.destroyMessage();
