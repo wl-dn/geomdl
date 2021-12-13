@@ -348,7 +348,7 @@ export default {
         //   tileMatrixSetID: "GoogleMapsCompatible",
         //   show: true,
         // }),
-        imageryProvider: wmsImageLayer,
+        imageryProvider: this.loadGDLayer(),
 
         orderIndependentTranslucency: false,
         contextOptions: {
@@ -886,13 +886,13 @@ export default {
           });
         }
         let imgUrl = require("../../assets/images/clusterIcon/hole.png");
-        this.addHolePrimitive(billboards, position, label,imgUrl);
+        this.addHolePrimitive(billboards, position, label, imgUrl);
       }
       // viewer.flyTo(billboards);
     },
 
     // 加载广告牌（钻孔）
-    addHolePrimitive(billboards, position, label,imgUrl) {
+    addHolePrimitive(billboards, position, label, imgUrl) {
       // let image = document.createElement("img");
       // image.src = require("../../assets/images/hole.png");
       // image.onload = (e) => {
@@ -1591,16 +1591,34 @@ export default {
               pickedFeature.getProperty("孔口标高") -
               this.getMdlDegreeCenter(cartographic)[0];
             console.log(mhDistance);
+
             this.$http
-              .get("/getHoleLayerInfoByHoleCode", {
+              .get("/getHoleLayerInfoByHeight", {
                 params: {
-                  holecode: holecode,
+                  holeCode: holecode,
+                  height: mhDistance,
                 },
               })
               .then((res) => {
-                this.drillName = holecode;
-                this.layerInfo = res.data.data;
-                this.isLayerDialogVisible = true;
+                this.tableCommonData = [];
+                let properList = res.data.data[0];
+                console.log(res.data);
+                console.log(properList);
+                this.tableTitleTheme = holecode;
+                for (let k in properList) {
+                  let obj = {
+                    label: k,
+                    value: properList[k],
+                  };
+                  this.tableCommonData.push(obj);
+                }
+                this.isCommonVisible = true;
+                // this.drillName = holecode;
+                // this.layerInfo = res.data.data;
+                // this.isLayerDialogVisible = true;
+              })
+              .catch((err) => {
+                console.log(err);
               });
           } else if (
             pickedFeature.tileset._url === "3DTiles/model_3dtiles/tileset.json"
@@ -1641,7 +1659,15 @@ export default {
       }
       return -1;
     },
-
+    loadGDLayer() {
+      let templayer = new Cesium.UrlTemplateImageryProvider({
+        url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+        minimumLevel: 3,
+        maximumLevel: 18,
+      });
+      templayer.name = "gdlayer";
+      return templayer;
+    },
     // 绘制线
     drawLine(leftPoint, secPoint, color) {
       viewer.entities.add({
@@ -1939,7 +1965,7 @@ export default {
         let label = item.label;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
         let imgUrl = require("../../assets/images/clusterIcon/hole1.png");
-        this.addHolePrimitive(this.holeBillbordsLayer, position, label,imgUrl);
+        this.addHolePrimitive(this.holeBillbordsLayer, position, label, imgUrl);
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500),
           orientation: {
