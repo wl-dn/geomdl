@@ -886,13 +886,13 @@ export default {
           });
         }
         let imgUrl = require("../../assets/images/clusterIcon/hole.png");
-        this.addHolePrimitive(billboards, position, label, imgUrl);
+        this.addHolePrimitive(billboards, position, label,imgUrl);
       }
       // viewer.flyTo(billboards);
     },
 
     // 加载广告牌（钻孔）
-    addHolePrimitive(billboards, position, label, imgUrl) {
+    addHolePrimitive(billboards, position, label,imgUrl) {
       // let image = document.createElement("img");
       // image.src = require("../../assets/images/hole.png");
       // image.onload = (e) => {
@@ -1939,7 +1939,7 @@ export default {
         let label = item.label;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
         let imgUrl = require("../../assets/images/clusterIcon/hole1.png");
-        this.addHolePrimitive(this.holeBillbordsLayer, position, label, imgUrl);
+        this.addHolePrimitive(this.holeBillbordsLayer, position, label,imgUrl);
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500),
           orientation: {

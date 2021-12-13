@@ -443,6 +443,7 @@ export default {
           url = url + "&cql_filter=" + cqlStr;
         }
       }
+      console.log("模糊查询：",url);
       let sendData = [];
       this.$http(url).then((res) => {
         console.log(res.data);
