@@ -35,10 +35,10 @@
         v-show="activeIndex === 2"
         @sendTree3dViewInfo="recept3dViewInfo"
       ></mdlView>
-      <mdlFenxi
+      <!-- <mdlFenxi
         v-if="activeIndex === 3"
         @sendFenxiInfo="receptFenxiInfo"
-      ></mdlFenxi>
+      ></mdlFenxi> -->
       <div class="mdlTool_box" v-if="activeIndex === 4">
         <el-select
           v-model="mdlNameValue"
@@ -171,12 +171,12 @@ export default {
           icon: "icon-diqiu",
           label: "三维服务",
         },
-        {
-          id: 3,
-          checked: false,
-          icon: "icon-fenxi",
-          label: "专业分析",
-        },
+        // {
+        //   id: 3,
+        //   checked: false,
+        //   icon: "icon-fenxi",
+        //   label: "专业分析",
+        // },
         {
           id: 4,
           checked: false,
