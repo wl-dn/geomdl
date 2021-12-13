@@ -397,13 +397,15 @@ export default {
       mdlScene.globe.translucency.frontFaceAlphaByDistance =
         new Cesium.NearFarScalar(1000.0, 1, 1000000.0, 1);
 
+      this.flytochina();
+
       // 将三维球定位到中国
-      CesiumUtils.viewCesiumUtils().resetView(
-        viewer,
-        113.805972,
-        27.664014,
-        8000000.0
-      );
+      // CesiumUtils.viewCesiumUtils().resetView(
+      //   viewer,
+      //   113.805972,
+      //   27.664014,
+      //   8000000.0
+      // );
     },
 
     // 加载wms服务
@@ -566,6 +568,7 @@ export default {
       });
     },
     loadMapServer(url, isChecked) {
+      console.log(url);
       // 判断图层是否存在
       let obj = this.layerIsExist(url);
       if (obj.flag) {
@@ -575,7 +578,8 @@ export default {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
         });
-        viewer.zoomTo(acrgisImagelayer);
+        console.log(acrgisImagelayer);
+        // viewer.zoomTo(acrgisImagelayer);
         if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
       }
     },
@@ -745,19 +749,19 @@ export default {
           endTransform: Cesium.Matrix4.IDENTITY,
         });
       } else {
-        CesiumUtils.viewCesiumUtils().resetView(
-          viewer,
-          tempParams.longitude,
-          tempParams.latitude,
-          203172.52,
-          355.46,
-          -90
-        );
-        CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
-        // viewer.zoomTo(
-        //   tileSet,
-        //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
+        // CesiumUtils.viewCesiumUtils().resetView(
+        //   viewer,
+        //   tempParams.longitude,
+        //   tempParams.latitude,
+        //   203172.52,
+        //   355.46,
+        //   -90
         // );
+        // CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
+        viewer.zoomTo(
+          tileSet,
+          new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
+        );
       }
 
       // 注册模型事件
@@ -1620,7 +1624,10 @@ export default {
       let tempImagerys = imageryLayers._layers;
       for (let i = 0; i < tempImagerys.length; i++) {
         let url = tempImagerys[i].imageryProvider.url;
-        if (this.activeImageUrl.indexOf(url) >= 0 && tempImagerys[i].show)
+        if (
+          this.activeImageUrl.indexOf(url) >= 0 &&
+          tempImagerys[i].show === true
+        )
           return tempImagerys[i].imageryProvider;
       }
       return null;
@@ -1788,7 +1795,7 @@ export default {
         destination: Cesium.Cartesian3.fromDegrees(
           110.435314,
           40.960521,
-          80000000.0
+          8000000.0
         ),
         orientation: {
           heading: Cesium.Math.toRadians(20), //代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
@@ -1845,6 +1852,7 @@ export default {
         }
       }
     },
+    // 接受来自通用查询
     async receptSearchInfo(item) {
       // 是否加载钻孔并显示
       let flagObj = this.billbordsIsExist("holeLayer");
@@ -1855,7 +1863,8 @@ export default {
           if (primitiveId === item.worksiteid) {
             console.log(billboardsList[i]);
             let originalColor = billboardsList[i].color.clone();
-            let flashColor = new Cesium.Color(255, 255, 255, 1);
+            // let flashColor = new Cesium.Color(255, 255, 255, 1);
+            let flashColor = new Cesium.Color.RED;
             billboardsList[i].color = flashColor;
             viewer.camera.flyTo({
               destination: Cesium.Cartesian3.fromDegrees(
@@ -1981,14 +1990,14 @@ export default {
       if (!isChecked) {
         terrainProvider = new Cesium.EllipsoidTerrainProvider({});
       } else {
-        // terrainProvider = new Cesium.CesiumTerrainProvider({
-        //   url: url,
-        //   requestWaterMask: true,
-        // });
-        terrainProvider = new Cesium.createWorldTerrain({
+        terrainProvider = new Cesium.CesiumTerrainProvider({
+          url: url,
           requestWaterMask: true,
-          requestVertexNormals: true,
         });
+        // terrainProvider = new Cesium.createWorldTerrain({
+        //   requestWaterMask: true,
+        //   requestVertexNormals: true,
+        // });
         console.log(terrainProvider);
       }
       scene.terrainProvider = terrainProvider;

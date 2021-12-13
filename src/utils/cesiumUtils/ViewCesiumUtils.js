@@ -100,12 +100,12 @@ export default class ViewCesiumUtils {
     static taggleEarthShow(viewer) {
         viewer.scene.globe.show = !viewer.scene.globe.show;
         // 修改背景颜色
-        viewer.scene.skyBox.show = false;
-        viewer.scene.sun.show = false;
-        viewer.scene.moon.show = false;
-        viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
-        viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
-        viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
+        // viewer.scene.skyBox.show = false;
+        // viewer.scene.sun.show = false;
+        // viewer.scene.moon.show = false;
+        // viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
+        // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
+        // viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
     }
     // 改变透明度
     static changeTerrainAlpha(viewer, alpha) {

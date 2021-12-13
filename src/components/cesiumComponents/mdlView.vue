@@ -59,6 +59,14 @@ export default {
               serviceType: "3DTiles",
             },
             {
+              id: "1-10",
+              label: "纵断面",
+              name: "sec1mdl",
+              // url: "3DTiles/sectionMdl/sec-1/tileset.json",
+              url: "3DTiles/纵断面合成/tileset.json",
+              serviceType: "3DTiles",
+            },
+            {
               id: "1-3",
               label: "sec-1",
               name: "sec1mdl",

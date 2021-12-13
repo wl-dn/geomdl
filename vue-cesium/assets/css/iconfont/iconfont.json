@@ -1,0 +1,107 @@
+{
+  "id": "2924758",
+  "name": "3dMdl",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "18497349",
+      "name": "地上地下",
+      "font_class": "dishangdixia",
+      "unicode": "e608",
+      "unicode_decimal": 58888
+    },
+    {
+      "icon_id": "1221894",
+      "name": "房子 实心",
+      "font_class": "solid-home",
+      "unicode": "e641",
+      "unicode_decimal": 58945
+    },
+    {
+      "icon_id": "1302",
+      "name": "加",
+      "font_class": "jia",
+      "unicode": "e600",
+      "unicode_decimal": 58880
+    },
+    {
+      "icon_id": "162781",
+      "name": "减",
+      "font_class": "jian",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "5387606",
+      "name": "全屏",
+      "font_class": "quanping",
+      "unicode": "eb11",
+      "unicode_decimal": 60177
+    },
+    {
+      "icon_id": "5064085",
+      "name": "管理",
+      "font_class": "guanli",
+      "unicode": "e640",
+      "unicode_decimal": 58944
+    },
+    {
+      "icon_id": "17583543",
+      "name": "tin地形",
+      "font_class": "tindixing",
+      "unicode": "eca5",
+      "unicode_decimal": 60581
+    },
+    {
+      "icon_id": "991651",
+      "name": "圆圈",
+      "font_class": "yuanquan",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    },
+    {
+      "icon_id": "11301460",
+      "name": "矩形",
+      "font_class": "juxing",
+      "unicode": "e66e",
+      "unicode_decimal": 58990
+    },
+    {
+      "icon_id": "17985161",
+      "name": "多边形",
+      "font_class": "duobianxing",
+      "unicode": "e63d",
+      "unicode_decimal": 58941
+    },
+    {
+      "icon_id": "1181181",
+      "name": "工具",
+      "font_class": "gongju",
+      "unicode": "e6ad",
+      "unicode_decimal": 59053
+    },
+    {
+      "icon_id": "21414789",
+      "name": "分析",
+      "font_class": "fenxi",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "1719347",
+      "name": "地球",
+      "font_class": "diqiu",
+      "unicode": "e7b9",
+      "unicode_decimal": 59321
+    },
+    {
+      "icon_id": "4922636",
+      "name": "地图",
+      "font_class": "map",
+      "unicode": "e67a",
+      "unicode_decimal": 59002
+    }
+  ]
+}

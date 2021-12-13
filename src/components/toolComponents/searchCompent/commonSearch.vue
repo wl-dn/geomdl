@@ -16,7 +16,7 @@
         <el-radio v-model="radio" label="2">图层查询</el-radio>
       </div>
       <div>
-        <el-radio v-model="radio" label="3">空间检索</el-radio>
+        <!-- <el-radio v-model="radio" label="3">空间检索</el-radio> -->
       </div>
     </div>
     <div class="commonSearchBox_right">
@@ -76,7 +76,7 @@
           <div @click="resetOnClick(2)">重置</div>
         </div>
       </div>
-      <div v-show="radio == 3">
+      <!-- <div v-show="radio == 3">
         <div class="spaceSearchBox">
           <div>
             <span>图层选择</span>
@@ -149,7 +149,6 @@
             </div>
             <div class="spaceSearchTool_box_3" v-if="spaceSelectValue === '3'">
               <div>
-                <!-- <el-radio v-model="coordSelect"> </el-radio> -->
                 <span>经度</span>
                 <el-input
                   v-model="coordinateParams.lon"
@@ -164,7 +163,6 @@
                 ></el-input>
               </div>
               <div>
-                <!-- <el-radio v-model="coordSelect"></el-radio> -->
                 <span>经距</span>
                 <el-input
                   v-model="coordinateParams.coordX"
@@ -179,7 +177,6 @@
                 ></el-input>
               </div>
               <div>
-                <!-- <el-radio v-model="coordSelect"></el-radio> -->
                 <span>里程</span>
                 <el-input
                   v-model="coordinateParams.mileage"
@@ -206,6 +203,7 @@
           <div @click="resetOnClick(2)">重置</div>
         </div>
       </div>
+   -->
     </div>
     <!-- <div>
       <el-radio v-model="radio" label="1">模糊查询：</el-radio>
@@ -420,7 +418,6 @@ export default {
     },
     // 图层查询
     searchByTC() {
-      console.log("图层查询");
       if (this.layerSelectValue === "") return;
       let layerItem = this.layerOptions.find((obj) => {
         if (obj.layer === this.layerSelectValue) {
@@ -431,14 +428,13 @@ export default {
       let url = tempLayreItem.wfsUrl;
       let cqlStr = "";
       const reg = /^\d+$/; // 判断是否为数字
-      // const flag = reg.test(this.fieldValue);
+      const flag = reg.test(this.fieldValue);
       let tempStr = this.fieldValue;
-      // if (!flag) {
-      //   tempStr = `'${tempStr}'`;
-      // }
+      if (!flag) {
+        tempStr = `'${tempStr}'`;
+      }
       if (this.fieldSelectValue !== "" && this.fieldValue !== "") {
-        cqlStr = `${this.fieldSelectValue}` +' like \'%';
-        cqlStr += `${tempStr}` + '%\'';
+        cqlStr = `${this.fieldSelectValue}=${tempStr}`;
         url = url + "&cql_filter=" + cqlStr;
       }
       let sendData = [];
@@ -462,7 +458,6 @@ export default {
 
         this.$emit("sendSearchInfoInwmsLayer", sendData);
       });
-
       // this.$emit("sendLayerSearchInfo", url, tempLayreItem.name);
     },
 
@@ -511,8 +506,7 @@ export default {
         this.fieldOptions = resultData;
       });
     },
-    layerSelectOnChange2(val) {
-    },
+    layerSelectOnChange2(val) {},
     fieldSelectOnChange(val) {},
 
     // 一下操作都不会保留上一步的操作结果
@@ -625,16 +619,16 @@ export default {
 </script>
 <style>
 .commonSearchBox .vaguebox .el-input {
-  width: 215px; /**sisi */
+  width: 255px; /**sisi */
 }
 .layerSelectBox > div:nth-child(1) .el-input {
-  width: 170px; /**sisi */
+  width: 240px; /**sisi */
 }
 .layerSelectBox > div:nth-child(2) .el-select {
-  width: 105px; /**sisi */
+  width: 110px; /**sisi */
 }
 .layerSelectBox > div:nth-child(2) .fieldValueinput {
-  width: 101px; /**sisi */
+  width: 110px; /**sisi */
 }
 .spaceSearchTool_box_3 .el-input .el-input__inner {
   height: 30px;
@@ -703,7 +697,7 @@ export default {
 .spaceSearchBox > div:nth-child(2) .el-select {
   margin-left: 20px;
   width: 236px; /**sisi */
-  margin-top:5px;
+  margin-top: 5px;
 }
 .spaceSearchBox .spaceSearchTool_box {
   margin-top: 20px;
