@@ -861,20 +861,22 @@ export default {
             endTransform: Cesium.Matrix4.IDENTITY,
           });
         }
-        this.addHolePrimitive(billboards, position, label);
+        let imgUrl = require("../../assets/images/clusterIcon/hole.png");
+        this.addHolePrimitive(billboards, position, label,imgUrl);
       }
       // viewer.flyTo(billboards);
     },
 
     // 加载广告牌（钻孔）
-    addHolePrimitive(billboards, position, label) {
+    addHolePrimitive(billboards, position, label,imgUrl) {
       // let image = document.createElement("img");
       // image.src = require("../../assets/images/hole.png");
       // image.onload = (e) => {
       // 异步加载的过程
       billboards.add({
         position: position,
-        image: require("../../assets/images/clusterIcon/hole.png"),
+        // image: require("../../assets/images/clusterIcon/hole.png"),
+        image: url,
         show: true,
         pixelOffset: new Cesium.Cartesian2(0, 0), // default: (0, 0)
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
@@ -1905,7 +1907,8 @@ export default {
         let lat = Number(item.latitude);
         let label = item.label;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
-        this.addHolePrimitive(this.holeBillbordsLayer, position, label);
+        let imgUrl = require("../../assets/images/clusterIcon/hole1.png");
+        this.addHolePrimitive(this.holeBillbordsLayer, position, label,imgUrl);
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500),
           orientation: {

@@ -437,10 +437,11 @@ export default {
       //   tempStr = `'${tempStr}'`;
       // }
       if (this.fieldSelectValue !== "" && this.fieldValue !== "") {
-        cqlStr = `${this.fieldSelectValue}` +' like \'%';
-        cqlStr += `${tempStr}` + '%\'';
+        cqlStr = `${this.fieldSelectValue}` +' like \'%25';
+        cqlStr += `${tempStr}` + '%25\'';
         url = url + "&cql_filter=" + cqlStr;
       }
+      console.log("模糊查询：",url);
       let sendData = [];
       this.$http(url).then((res) => {
         console.log(res.data);
