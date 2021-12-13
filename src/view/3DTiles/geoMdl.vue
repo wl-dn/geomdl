@@ -60,6 +60,7 @@
       @commonToolHandleOnClick="commonToolHandleOnClick"
       :isCesiumCommonToolVisible="isCesiumCommonToolVisible"
     ></cesiumCommonTool>
+    <!-- 调整 -->
     <adjustMdlComponent
       v-show="isShowTool"
       :isWireframevCheck="isWireframevCheck"
