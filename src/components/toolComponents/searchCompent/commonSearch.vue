@@ -431,11 +431,17 @@ export default {
       const flag = reg.test(this.fieldValue);
       let tempStr = this.fieldValue;
       if (!flag) {
-        tempStr = `'${tempStr}'`;
+        // tempStr = `'${tempStr}'`;
       }
       if (this.fieldSelectValue !== "" && this.fieldValue !== "") {
-        cqlStr = `${this.fieldSelectValue}=${tempStr}`;
-        url = url + "&cql_filter=" + cqlStr;
+        if (!flag) {
+          cqlStr = `${this.fieldSelectValue}` + " like '%25";
+          cqlStr += `${tempStr}` + "%25'";
+          url = url + "&cql_filter=" + cqlStr;
+        } else {
+          cqlStr = `${this.fieldSelectValue}=${tempStr}`;
+          url = url + "&cql_filter=" + cqlStr;
+        }
       }
       let sendData = [];
       this.$http(url).then((res) => {
