@@ -410,7 +410,7 @@ export default {
     },
 
     // 加载wms服务
-    async loadWmsLayer(url, layers, isChecked) {
+    async loadWmsLayer(url, layers, isChecked, label) {
       // 判断图层是否存在
       let obj = this.layerIsExist_2(layers);
       if (obj.flag) {
@@ -429,6 +429,7 @@ export default {
           },
         });
         wmsImageLayer.name = layers;
+        wmsImageLayer.label = label;
         let aa = await wmsImageLayer.readyPromise;
         console.log("定位");
         if (imageryLayers) {
@@ -524,9 +525,9 @@ export default {
       };
       console.log(cqlStr);
       // if (cqlStr === "" || label === cqlStr) {
-        parameters.CQL_FILTER = label;
+      parameters.CQL_FILTER = label;
       // } else {
-        // parameters.CQL_FILTER = label + " and " + cqlStr;
+      // parameters.CQL_FILTER = label + " and " + cqlStr;
       // }
       console.log(parameters);
       let wmsImageLayer = new Cesium.WebMapServiceImageryProvider({
@@ -535,6 +536,7 @@ export default {
         parameters: parameters,
       });
       wmsImageLayer.name = "temp" + layer + label;
+      wmsImageLayer.label = "筛选后图层信息";
       imageryLayers.addImageryProvider(wmsImageLayer);
       if (imageryLayers) {
         let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
@@ -782,16 +784,16 @@ export default {
         //   endTransform: Cesium.Matrix4.IDENTITY,
         // });
         viewer.zoomTo(tileSet, initialOrientation);
-        CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
+        // CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
         // viewer.zoomTo(
         //   tileSet,
         //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
         // );
         // CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
-        viewer.zoomTo(
-          tileSet,
-          new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
-        );
+        // viewer.zoomTo(
+        //   tileSet,
+        //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
+        // );
       }
 
       // 注册模型事件
@@ -883,20 +885,22 @@ export default {
             endTransform: Cesium.Matrix4.IDENTITY,
           });
         }
-        this.addHolePrimitive(billboards, position, label);
+        let imgUrl = require("../../assets/images/clusterIcon/hole.png");
+        this.addHolePrimitive(billboards, position, label, imgUrl);
       }
       // viewer.flyTo(billboards);
     },
 
     // 加载广告牌（钻孔）
-    addHolePrimitive(billboards, position, label) {
+    addHolePrimitive(billboards, position, label, imgUrl) {
       // let image = document.createElement("img");
       // image.src = require("../../assets/images/hole.png");
       // image.onload = (e) => {
       // 异步加载的过程
       billboards.add({
         position: position,
-        image: require("../../assets/images/clusterIcon/hole.png"),
+        // image: require("../../assets/images/clusterIcon/hole.png"),
+        image: imgUrl,
         show: true,
         pixelOffset: new Cesium.Cartesian2(0, 0), // default: (0, 0)
         eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
@@ -1406,6 +1410,7 @@ export default {
                     const properList = layerInfo[0].properties;
                     console.log(properList);
                     let obj = null;
+                    this.tableTitleTheme = tempImageryProvider.label;
                     for (let k in properList) {
                       obj = {
                         label: k,
@@ -1602,7 +1607,7 @@ export default {
           ) {
             this.tableCommonData = [];
             let titles = "地层编码";
-            this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
+            this.tableTitleTheme = "模型分层信息"; //设置表格title sisi
             let resStr = pickedFeature.getProperty("地层编码");
             let obj = {
               label: titles,
@@ -1709,7 +1714,8 @@ export default {
         this.loadWmsLayer(
           data.nodeData.url,
           data.nodeData.layers,
-          data.isChecked
+          data.isChecked,
+          data.nodeData.label
         );
       } else if (data.nodeData.serviceType === "Google") {
         this.loadUTLayer(
@@ -1932,7 +1938,8 @@ export default {
         let lat = Number(item.latitude);
         let label = item.label;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
-        this.addHolePrimitive(this.holeBillbordsLayer, position, label);
+        let imgUrl = require("../../assets/images/clusterIcon/hole1.png");
+        this.addHolePrimitive(this.holeBillbordsLayer, position, label, imgUrl);
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500),
           orientation: {
