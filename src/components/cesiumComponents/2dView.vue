@@ -13,7 +13,8 @@
       :data="treeData"
       show-checkbox
       node-key="id"
-      :default-expanded-keys="['1', '2', '3', '4', '5', '6','7','8']"
+      :default-expanded-keys="['1', '2', '3', '4', '5', '6', '7', '8']"
+      :default-checked-keys="['7-1']"
       @check-change="handleCheckChange"
       @check="handleCheck"
       @node-contextmenu="handleContextMenu"
@@ -381,7 +382,7 @@ export default {
           children: [
             {
               id: "7-1",
-              label:"赣州段地形",
+              label: "赣州段地形",
               url: "http://192.10.3.237:81/tsyTerrain/",
               serviceType: "地形服务",
             },

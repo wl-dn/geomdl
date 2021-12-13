@@ -95,9 +95,9 @@ export default {
   computed: {},
   methods: {
     onClickCesiumTool(item) {
-      // if (item.index !== 3) {
+      if (item.index == 1 || item.index == 2 || item.index == 6) {
         item.active = !item.active;
-      // }
+      }
       this.$emit("commonToolHandleOnClick", item);
     },
     onMessageFromComponent() {},
@@ -132,6 +132,9 @@ export default {
   line-height: 35px;
   border-radius: 4px;
   cursor: pointer;
+}
+.activeSpan {
+  background-color: darkcyan !important;
 }
 /* .CesiumTool_box {
   position: absolute;

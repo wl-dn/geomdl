@@ -349,7 +349,10 @@ export default {
         //   tileMatrixSetID: "GoogleMapsCompatible",
         //   show: true,
         // }),
-        imageryProvider: this.loadGDLayer(),
+        imageryProvider: wmsImageLayer,
+        // imageryProvider: new Cesium.UrlTemplateImageryProvider({
+        //   url: "https://a.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiemhlbmdwIiwiYSI6ImNrNzQ1aXRvaDAwcWkzaW5rYnBjMjd0eDMifQ.tImrPlywXxmGepuX6lo8kg",
+        // }),
 
         orderIndependentTranslucency: false,
         contextOptions: {
@@ -358,6 +361,10 @@ export default {
           },
         },
       });
+      let zjurl =
+        "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
+        this.tiandituTk;
+
       // 修改背景颜色
       viewer.scene.skyBox.show = false;
       viewer.scene.sun.show = false;
@@ -371,15 +378,16 @@ export default {
       // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
       // viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
       // 加载三维地形
-      // let terrainProvider = new Cesium.CesiumTerrainProvider({
-      //   url: "http://192.10.3.237:81/tsyTerrain/",
-      // });
-      // viewer.terrainProvider = terrainProvider;
+      let terrainProvider = new Cesium.CesiumTerrainProvider({
+        url: "http://192.10.3.237:81/tsyTerrain/",
+      });
+      viewer.terrainProvider = terrainProvider;
 
       viewer._cesiumWidget._creditContainer.style.display = "none"; //是否显示cesium标识
 
       // 初始化imagelauers
       imageryLayers = viewer.imageryLayers;
+      this.loadTDMapLayer(zjurl, "tdtCiaLayer", true);
       let mdlScene = viewer.scene;
 
       // 初始化钻孔层
@@ -416,6 +424,7 @@ export default {
       let obj = this.layerIsExist_2(layers);
       if (obj.flag) {
         imageryLayers._layers[obj.index].show = isChecked;
+        isChecked ? this.getGeoServerWmsBoundingBox(url) : 1;
       } else {
         let wmsImageLayer = new Cesium.WebMapServiceImageryProvider({
           url: url,
@@ -588,7 +597,7 @@ export default {
         // viewer.flyTo(datasource.entities);
       });
     },
-    loadMapServer(url, isChecked) {
+    loadMapServer(url, isChecked, label) {
       console.log(url);
       // 判断图层是否存在
       let obj = this.layerIsExist(url);
@@ -599,6 +608,7 @@ export default {
         let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
           url: url,
         });
+        acrgisImagelayer.label = label;
         // viewer.zoomTo(acrgisImagelayer);
         if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
       }
@@ -1372,6 +1382,7 @@ export default {
                   this.drillName = pick.id;
                   this.layerInfo = res.data.data;
                   this.isLayerDialogVisible = true;
+                  this.isCommonVisible = false;
                 });
             }
 
@@ -1420,6 +1431,7 @@ export default {
                       this.tableCommonData.push(obj);
                     }
                     this.isCommonVisible = true;
+                    this.isLayerDialogVisible = false;
                   });
                 }
               }
@@ -1592,35 +1604,47 @@ export default {
               pickedFeature.getProperty("孔口标高") -
               this.getMdlDegreeCenter(cartographic)[0];
             console.log(mhDistance);
-
             this.$http
-              .get("/getHoleLayerInfoByHeight", {
+              .get("getHoleLayerInfoByHoleCode", {
                 params: {
-                  holeCode: holecode,
-                  height: mhDistance,
+                  holecode: holecode,
                 },
               })
               .then((res) => {
-                this.tableCommonData = [];
-                let properList = res.data.data[0];
-                console.log(res.data);
-                console.log(properList);
-                this.tableTitleTheme = holecode;
-                for (let k in properList) {
-                  let obj = {
-                    label: k,
-                    value: properList[k],
-                  };
-                  this.tableCommonData.push(obj);
-                }
-                this.isCommonVisible = true;
-                // this.drillName = holecode;
-                // this.layerInfo = res.data.data;
-                // this.isLayerDialogVisible = true;
-              })
-              .catch((err) => {
-                console.log(err);
+                this.drillName = holecode;
+                console.log(res.data.data);
+                this.layerInfo = res.data.data;
+                this.isLayerDialogVisible = true;
+                this.isCommonVisible = false;
               });
+            // this.$http
+            //   .get("/getHoleLayerInfoByHeight", {
+            //     params: {
+            //       holeCode: holecode,
+            //       height: mhDistance,
+            //     },
+            //   })
+            //   .then((res) => {
+            //     this.tableCommonData = [];
+            //     let properList = res.data.data[0];
+            //     console.log(res.data);
+            //     console.log(properList);
+            //     this.tableTitleTheme = holecode;
+            //     for (let k in properList) {
+            //       let obj = {
+            //         label: k,
+            //         value: properList[k],
+            //       };
+            //       this.tableCommonData.push(obj);
+            //     }
+            //     this.isCommonVisible = true;
+            //     // this.drillName = holecode;
+            //     // this.layerInfo = res.data.data;
+            //     // this.isLayerDialogVisible = true;
+            //   })
+            //   .catch((err) => {
+            //     console.log(err);
+            //   });
           } else if (
             pickedFeature.tileset._url === "3DTiles/model_3dtiles/tileset.json"
           ) {
@@ -1634,6 +1658,7 @@ export default {
             };
             this.tableCommonData.push(obj);
             this.isCommonVisible = true;
+            this.isLayerDialogVisible = false;
           } else {
             this.tableCommonData = [];
             let propertyList = pickedFeature.getPropertyNames();
@@ -1645,6 +1670,7 @@ export default {
               this.tableTitleTheme = "地层信息"; //设置表格title sisi
               this.tableCommonData.push(obj);
               this.isCommonVisible = true;
+              this.isLayerDialogVisible = false;
             }
           }
           return 1;
@@ -1769,7 +1795,11 @@ export default {
           data.isChecked
         );
       } else if (data.nodeData.serviceType === "mapserver") {
-        this.loadMapServer(data.nodeData.url, data.isChecked);
+        this.loadMapServer(
+          data.nodeData.url,
+          data.isChecked,
+          data.nodeData.label
+        );
       } else if (data.nodeData.serviceType === "kml") {
         this.loadKmlSource(
           data.nodeData.url,
