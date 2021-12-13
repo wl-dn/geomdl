@@ -13,7 +13,7 @@ import HelloCesium from '../view/CesiumStandBox/HelloCesium'
 import CesiumWedgit from '../view/CesiumStandBox/CesiumWedgit.vue'
 import Geo3DTiles from "../view/3DTiles/geo3DTiles.vue"
 import BIM3DTiles from "../view/3DTiles/3DTilesBim.vue"
-import adjust3DTiles from "../view/3DTiles/geoMdl.vue"
+import scene from "../view/3DTiles/geoMdl.vue"
 import drawEntity from "../view/3DTiles/drawEntity.vue"
 import digTerrian from "../view/3DTiles/digTerrian.vue"
 import MdlClip from "../view/3DTiles/3DTilesClip.vue"
@@ -25,9 +25,9 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    name: 'Home',
-    component: Home,
-    redirect: "/adjust3DTiles",
+    name: 'scene',
+    component: scene,
+    // redirect: "/scene",
     children: [
       {
         path: "/helloCesium",
@@ -46,8 +46,8 @@ const routes = [
         component: BIM3DTiles
       },
       {
-        path: "/adjust3DTiles",
-        component: adjust3DTiles
+        path: "/scene",
+        component: scene
       },
       {
         path: "/drawEntity",
