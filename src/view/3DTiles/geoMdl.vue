@@ -35,10 +35,10 @@
         v-show="activeIndex === 2"
         @sendTree3dViewInfo="recept3dViewInfo"
       ></mdlView>
-      <!-- <mdlFenxi
+      <mdlFenxi
         v-if="activeIndex === 3"
         @sendFenxiInfo="receptFenxiInfo"
-      ></mdlFenxi> -->
+      ></mdlFenxi>
       <div class="mdlTool_box" v-if="activeIndex === 4">
         <el-select
           v-model="mdlNameValue"
@@ -208,7 +208,7 @@ export default {
         "http://10.101.140.3/geoserver/db-24/wms",
         "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geoboundzone&maxFeatures=50&outputFormat=application/json",
       ],
-
+      activeImageryNameSet: new Set(), // 存放唯一值
       // 图形是否闪烁
       flashX: 0.5,
       flashFlag: true,
@@ -217,7 +217,7 @@ export default {
       flagTimer: null, // 区分单击和双击
 
       //虚拟钻孔
-      isvirtualLayerDialogVisible: false,
+      isvirtualLayerDialogVisible: true,
       virtualLayerInfo: [],
       fieldsList: [],
       virtualTableTheme: null, //设置表格title
@@ -345,7 +345,7 @@ export default {
       let TDZJurl =
         "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
         this.tiandituTk;
-      //  ImageryLoader.loadTDMapLayer(viewer, TDZJurl, "tdtCiaLayer", true);
+      ImageryLoader.loadTDMapLayer(viewer, TDZJurl, "tdtCiaLayer", true);
       let mdlScene = viewer.scene;
 
       // 初始化钻孔层
@@ -806,8 +806,14 @@ export default {
                   },
                 })
                 .then((res) => {
+                  this.layerInfo = [];
+                  let count = this.layerInfo.length;
                   this.drillName = pick.id;
-                  this.layerInfo = res.data.data;
+                  this.layerInfo.push({
+                    title: pick.id,
+                    name: ++count + "",
+                    tableData: res.data.data,
+                  });
                   this.isLayerDialogVisible = true;
                   this.isCommonVisible = false;
                 });
@@ -830,6 +836,7 @@ export default {
                 // 只有显示的并且是geoserver和arcgisserver的可以用
                 // 确定哪个图层可查
                 let tempImageryProvider = this.getQueryImageryProvider();
+                console.log(tempImageryProvider);
                 if (!tempImageryProvider.length) return;
                 let searchRes = [];
                 this.tableCommonData = [];
@@ -850,6 +857,7 @@ export default {
                     Cesium.when(promise, (layerInfo) => {
                       let tmpArr = [];
                       const properList = layerInfo[0].properties;
+                      console.log(layerInfo);
                       console.log(properList);
                       let obj = null;
                       this.tableTitleTheme = tmpImgProvider.label;
@@ -862,12 +870,16 @@ export default {
                       }
                       if (tmpArr.length) {
                         let count = this.tableCommonData.length;
-                        this.tableCommonData.push({title:tmpImgProvider.label,name:++count+'',tableData:tmpArr});
+                        this.tableCommonData.push({
+                          title: tmpImgProvider.label,
+                          name: ++count + "",
+                          tableData: tmpArr,
+                        });
                         this.isCommonVisible = true;
-                        this.isLayerDialogVisible = false;                        
+                        this.isLayerDialogVisible = false;
                       }
                     });
-                  }                  
+                  }
                 }
               }
             }
@@ -902,6 +914,32 @@ export default {
               // console.log(degreeCenter);
               //查询虚拟钻孔信息  sisi
               this.virtualLayerInfo = [];
+              let count = this.virtualLayerInfo.length;
+              let tableData = [
+                {
+                  topElevation: 1,
+                  bottomElevation: 1,
+                  stratCode: 1,
+                },
+                {
+                  topElevation: 1,
+                  bottomElevation: 1,
+                  stratCode: 1,
+                },
+                {
+                  topElevation: 1,
+                  bottomElevation: 1,
+                  stratCode: 1,
+                },
+              ];
+              this.virtualLayerInfo.push({
+                title: "虚拟钻孔点位信息",
+                name: ++count + "",
+                tableData: tableData,
+              });
+              this.isvirtualLayerDialogVisible = true;
+              return;
+              this.virtualLayerInfo = [];
               let client = new VirtualHoleService.DummyHoleServicePromiseClient(
                 "http://10.101.140.3:8011"
               );
@@ -921,12 +959,6 @@ export default {
                 let holeList = resObject.holeListList[0];
                 let infoFileds = Object.keys(holeList.layerInfoListList[0]);
                 this.fieldsList = [];
-                // for(let i = 0; i < infoFileds.length; i++) {
-                //   this.fieldsList.push({
-                //     value: infoFileds[i],
-                //     lable: infoFileds[i],
-                //   })
-                // }
                 this.virtualLayerInfo = holeList.layerInfoListList;
                 this.virtualTableTheme = "虚拟钻孔点位信息";
                 this.isvirtualLayerDialogVisible = true;
@@ -1046,10 +1078,19 @@ export default {
                 },
               })
               .then((res) => {
-                this.setColorTable(res.data.data, mhDistance);
-                this.drillName = holecode;
-                this.layerInfo = res.data.data;
+                this.layerInfo = [];
+                let count = this.layerInfo.length;
 
+                this.setColorTable(res.data.data, mhDistance);
+
+                this.drillName = holecode;
+                // this.layerInfo = res.data.data;
+                console.log(count);
+                this.layerInfo.push({
+                  title: holecode,
+                  name: ++count + "",
+                  tableData: res.data.data,
+                });
                 this.isLayerDialogVisible = true;
                 this.isCommonVisible = false;
               });
@@ -1086,16 +1127,22 @@ export default {
           ) {
             let titles = "地层编码";
             let resStr = pickedFeature.getProperty("地层编码");
-            let obj = [{
-              label: titles,
-              value: resStr,
-            }];
+            let obj = [
+              {
+                label: titles,
+                value: resStr,
+              },
+            ];
             if (obj.length) {
               this.tableCommonData = [];
               let count = this.tableCommonData.length;
-              this.tableCommonData.push({title:'模型分层信息',name:++count+'',tableData:obj});
+              this.tableCommonData.push({
+                title: "模型分层信息",
+                name: ++count + "",
+                tableData: obj,
+              });
               this.isCommonVisible = true;
-              this.isLayerDialogVisible = false;             
+              this.isLayerDialogVisible = false;
             }
           } else {
             this.tableCommonData = [];
@@ -1112,7 +1159,11 @@ export default {
               this.isCommonVisible = true;
               this.isLayerDialogVisible = false;
               let count = this.tableCommonData.length;
-              this.tableCommonData.push({title:'地层信息',name:++count+'',tableData:tmp});
+              this.tableCommonData.push({
+                title: "地层信息",
+                name: ++count + "",
+                tableData: tmp,
+              });
             }
           }
           return 1;
@@ -1158,12 +1209,12 @@ export default {
       let tempImagerys = imageryLayers._layers;
       let imgArr = [];
       for (let i = 0; i < tempImagerys.length; i++) {
-        let url = tempImagerys[i].imageryProvider.url;
+        let name = tempImagerys[i].imageryProvider.name;
         if (
-          this.activeImageUrl.indexOf(url) >= 0 &&
+          this.activeImageryNameSet.has(name) &&
           tempImagerys[i].show === true
         )
-        imgArr.push(tempImagerys[i].imageryProvider);
+          imgArr.push(tempImagerys[i].imageryProvider);
       }
       return imgArr;
     },
@@ -1222,6 +1273,7 @@ export default {
               data.nodeData.children[i].label,
               data.isChecked
             );
+            this.activeImageryNameSet.add(data.nodeData.children[i].layers);
           }
         } else {
           ImageryLoader.loadWmsLayer(
@@ -1231,6 +1283,7 @@ export default {
             data.nodeData.label,
             data.isChecked
           );
+          this.activeImageryNameSet.add(data.nodeData.layers);
         }
       } else if (data.nodeData.serviceType === "Google") {
         this.loadUTLayer(
@@ -1264,6 +1317,7 @@ export default {
           data.nodeData.label,
           data.isChecked
         );
+        this.activeImageryNameSet.add(data.nodeData.layers);
       } else if (data.nodeData.serviceType === "kml") {
         ImageryLoader.loadKmlLayer(
           viewer,
@@ -1299,6 +1353,7 @@ export default {
           data.isChecked
         );
       }
+      console.log(this.activeImageryNameSet);
     },
     // 接收三维服务
     recept3dViewInfo(data) {
@@ -1490,7 +1545,7 @@ export default {
     },
     // 接收来自图层点击的信息
     receptLayerItemFromSearchCompent(item) {
-      console.log(item);
+      
       ImageryLoader.loadSelectWmsLayer(
         viewer,
         item.url,
@@ -1499,13 +1554,13 @@ export default {
         item.cqlStr,
         item.active
       );
+      this.activeImageryNameSet.add("temp" + item.layer + item.label);
     },
     // 重置所有结果
     receptResetInfoEvent(index) {
       if (index === 0) {
         this.holeBillbordsLayer.removeAll();
       } else if (index === 2) {
-        debugger;
         for (let i = 0; i < imageryLayers._layers.length; i++) {
           if (
             imageryLayers._layers[i].imageryProvider.name.indexOf("temp") >= 0

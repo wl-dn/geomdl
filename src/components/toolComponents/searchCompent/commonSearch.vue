@@ -227,12 +227,14 @@
 </template>
 
 <script>
+import eventVue from "../../../plugins/eventVue";
 export default {
   data() {
     return {
       radio: "1",
       vagueInput: "", // 模糊搜索的值
-      layerOptions: [
+      layerOptions: [],
+      tempLayerOptions: [
         {
           label: "地层（岩体）分布",
           layer: "geostratumzone",
@@ -428,7 +430,7 @@ export default {
           url = url + "&cql_filter=" + cqlStr;
         }
       }
-      console.log("模糊查询：",url);
+      console.log("模糊查询：", url);
       let sendData = [];
       this.$http(url).then((res) => {
         console.log(res.data);
@@ -590,6 +592,22 @@ export default {
         this.coordinateParams.coordY = "";
       }
     },
+    formatOptions(data) {
+      // 先确定是否显隐
+      for (let i = 0; i < this.layerOptions.length; i++) {
+        if (this.layerOptions[i].layer === data.layers) {
+          this.layerOptions.splice(i, 1);
+          return;
+        }
+      }
+      // 在添加
+      for (let i = 0; i < this.tempLayerOptions.length; i++) {
+        if (this.tempLayerOptions[i].layer === data.layers) {
+          this.layerOptions.push(this.tempLayerOptions[i]);
+          return;
+        }
+      }
+    },
   },
   watch: {
     radio(val) {
@@ -605,6 +623,31 @@ export default {
       }
       this.$emit("sendResetInfoEvent", 1);
     },
+  },
+  created() {
+    eventVue.$on("sendTree2DViewInfoByEventBus", (res) => {
+      console.log(res);
+      this.fieldOptions = [];
+      this.fieldValue = "";
+      this.layerSelectValue = "";
+      this.fieldSelectValue = "";
+      this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
+      this.$emit("sendResetInfoEvent", 2);
+      let tempList = res.nodeData;
+      let isChecked = res.isChecked;
+      if (tempList.serviceType === "wms") {
+        if (tempList.children) {
+          for (let i = 0; i < tempList.children.length; i++) {
+            this.formatOptions(tempList.children[i]);
+          }
+        } else {
+          this.formatOptions(tempList);
+        }
+      }
+    });
+  },
+  beforeDestroy() {
+    eventVue.$off("sendTree2DViewInfoByEventBus");
   },
 };
 </script>

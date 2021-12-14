@@ -22,7 +22,7 @@
     </el-autocomplete>
   </div> -->
   <div class="searchBox">
-    <div class="searchSubBox" v-if="isShowSearchBox">
+    <div class="searchSubBox" v-show="isShowSearchBox">
       <div class="searchBar">
         <div :class="['ladder', { ladder_selected: selectIndex === 1 }]">
           <span class="position_center" @click="selectIndex = 1">通用检索</span>
@@ -33,13 +33,13 @@
       </div>
       <div class="serachContent">
         <commonSearch
-          v-if="selectIndex === 1"
+          v-show="selectIndex === 1"
           @sendResetInfoEvent="receptResetInfoEvent"
           @sendSearachResultDataEvent="receptSearachResultDataEvent"
           @sendSearchInfoInwmsLayer="receptSearchInfoInwmsLayer"
           v-on="$listeners"
         ></commonSearch>
-        <specialSearch v-if="selectIndex === 2"></specialSearch>
+        <specialSearch v-show="selectIndex === 2"></specialSearch>
         <!-- 收纳盒子 -->
       </div>
       <transition name="searchResultFade">

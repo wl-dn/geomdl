@@ -79,7 +79,6 @@ export default class ImageryLoader {
         wmsImageLayer.name = "temp" + layer + label;
         wmsImageLayer.label = "筛选后图层信息";
         imageryLayers.addImageryProvider(wmsImageLayer);
-        imageryLayers.addImageryProvider(wmsImageLayer);
         ImageryLoader.setWmsView(viewer, url);
 
     }

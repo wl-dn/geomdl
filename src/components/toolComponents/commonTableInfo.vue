@@ -9,6 +9,7 @@
 <template>
   <transition name="fade">
     <div class="commonTableBox" v-if="isCommonVisible">
+      <span class="close_span" @click="closeOnClick">×</span>
       <el-tabs v-model="editableTabsValue" type="card">
         <el-tab-pane
           v-for="(item, index) in dataTabs"
@@ -45,13 +46,13 @@
 <script>
 export default {
   props: {
-    dataTabs:{
-      type:Array,
-      title:{ 
+    dataTabs: {
+      type: Array,
+      title: {
         type: String,
         default: "",
       },
-      name:{ 
+      name: {
         type: String,
         default: "",
       },
@@ -61,9 +62,9 @@ export default {
           return [];
         },
       },
-      default(){
+      default() {
         return [];
-      }
+      },
     },
     // tableData: {
     //   type: Array,
@@ -75,14 +76,14 @@ export default {
       type: Boolean,
       default: false,
     },
-    // tableTheme: { 
+    // tableTheme: {
     //   type: String,
     //   default: "",
     // }
   },
   data() {
     return {
-      editableTabsValue: '1',
+      editableTabsValue: "1",
     };
   },
   methods: {
@@ -90,9 +91,14 @@ export default {
       this.$emit("sendCommonCloseInfo", false);
     },
   },
+
 };
 </script>
-
+<style>
+.el-tabs__header {
+  margin: 0 0 5px !important;
+}
+</style>
 <style scoped>
 .commonTableBox {
   width: 600px;
@@ -106,12 +112,16 @@ export default {
   right: 0px;
 }
 .commonTableBox .head_box {
+  position: absolute;
+  right: 10px;
+  top: 2px;
   width: 100%;
   height: 40px;
   background-color: rgb(144, 147, 153);
   color: rgb(255, 255, 255);
   line-height: 40px;
   padding-left: 3px;
+  cursor: pointer;
   box-sizing: border-box;
 }
 .commonTableBox .content_box {
@@ -119,7 +129,7 @@ export default {
   height: 350px;
   overflow-y: auto;
 }
-.el-tabs__header{
+.el-tabs__header {
   margin: 0 !important;
 }
 .commonTableBox table {
@@ -144,8 +154,9 @@ export default {
   position: absolute;
   right: 10px;
   top: 7px;
-  font-size: 20px;
+  font-size: 30px;
   cursor: pointer;
+  z-index: 1;
 }
 /* 动画效果 */
 .fade-enter-active,

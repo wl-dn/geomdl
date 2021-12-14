@@ -9,32 +9,34 @@
 <template>
   <transition name="fade">
     <div class="virtualBox" v-if="isVisible">
-      <div class="virtualBox_head_box">
-        {{tableTheme}}  <!--sisi  设置表名-->
+      <!-- <div class="virtualBox_head_box">
+        {{ tableTheme }} -->
+        <!--sisi  设置表名-->
         <span class="close_span" @click="closeOnClick">×</span>
-      </div>
-      <el-table
-        :data="virtualLayerInfo"
-        border
-        style="width: 100%"
-        height="350px"
-        v-if="virtualLayerInfo.length !== 0"
-      >
-        <!-- <el-table-column
-          :prop="item.value"
-          v-for="(item, i) in fieldsList"
-          :key="i"
-          :label="item.label"
-        ></el-table-column> --> <!--sisi  设置表字段-->
-        <el-table-column prop="topElevation" label="顶板高程">
-        </el-table-column>
-        <el-table-column prop="bottomElevation" label="底板高程">
-        </el-table-column>
-        <el-table-column prop="stratCode" label="地层编码"> </el-table-column> -->
-        <!-- <el-table-column prop="qgenesis" label="地质成因"> </el-table-column> -->
-        <!-- <el-table-column prop="stratumeras" label="地质年代"> </el-table-column>
-        <el-table-column prop="lithology" label="岩性"> </el-table-column> --> -->
-      </el-table>
+      <!-- </div> -->
+      <el-tabs v-model="editableTabsValue" type="card">
+        <el-tab-pane
+          v-for="(item, index) in virtualLayerInfo"
+          :key="index"
+          :label="item.title"
+          :name="item.name"
+        >
+          <el-table
+            :data="item.tableData"
+            border
+            style="width: 100%"
+            height="350px"
+            v-if="virtualLayerInfo.length !== 0"
+          >
+            <el-table-column prop="topElevation" label="顶板高程">
+            </el-table-column>
+            <el-table-column prop="bottomElevation" label="底板高程">
+            </el-table-column>
+            <el-table-column prop="stratCode" label="地层编码">
+            </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </transition>
 </template>
@@ -44,6 +46,20 @@ export default {
   props: {
     virtualLayerInfo: {
       type: Array,
+      title: {
+        type: String,
+        default: "",
+      },
+      name: {
+        type: String,
+        default: "",
+      },
+      tableData: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
       default() {
         return [];
       },
@@ -58,13 +74,16 @@ export default {
       type: Boolean,
       default: false,
     },
-    tableTheme: {  //<!--sisi  设置表名-->
+    tableTheme: {
+      //<!--sisi  设置表名-->
       type: String,
       default: "",
-    }
+    },
   },
   data() {
-    return {};
+    return {
+      editableTabsValue: "1",
+    };
   },
   methods: {
     closeOnClick() {
@@ -108,8 +127,9 @@ export default {
   position: absolute;
   right: 10px;
   top: 7px;
-  font-size: 20px;
+  font-size: 30px;
   cursor: pointer;
+  z-index: 1;
 }
 /* 动画效果 */
 .holefade-enter-active,

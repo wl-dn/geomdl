@@ -13,7 +13,19 @@
       :data="treeData"
       show-checkbox
       node-key="id"
-      :default-expanded-keys="['1','1-1', '1-2','2', '2-1','3', '4', '5', '6', '7', '8']"
+      :default-expanded-keys="[
+        '1',
+        '1-1',
+        '1-2',
+        '2',
+        '2-1',
+        '3',
+        '4',
+        '5',
+        '6',
+        '7',
+        '8',
+      ]"
       :default-checked-keys="['6-1', '6-2', '7-1']"
       @check-change="handleCheckChange"
       @check="handleCheck"
@@ -32,6 +44,7 @@
 </template>
 
 <script>
+import eventVue from "../../plugins/eventVue";
 import rightDialog from "../toolComponents/rightDialog.vue";
 export default {
   data() {
@@ -389,6 +402,10 @@ export default {
     },
     handleCheck(node, checked) {
       this.$emit("sendTree2dViewInfo", {
+        nodeData: node,
+        isChecked: this.currentChecked,
+      });
+      eventVue.$emit("sendTree2DViewInfoByEventBus", {
         nodeData: node,
         isChecked: this.currentChecked,
       });

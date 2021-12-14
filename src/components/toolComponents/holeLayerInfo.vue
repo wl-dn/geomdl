@@ -9,29 +9,39 @@
 <template>
   <transition name="holefade">
     <div class="holeLayerBox" v-if="isVisible">
-      <div class="holeLayer_head_box">
-        <span>{{ drillname }}</span>
-        <span class="close_span" @click="closeOnClick">×</span>
-      </div>
+
+      <span class="close_span" @click="closeOnClick">×</span>
       <!--缩小宽度sisi-->
-      <el-table
-        :data="layerInfo"
-        border
-        style="width: 100%"
-        height="350px"
-        :row-class-name="tableRowClassName"
-      >
-        <el-table-column prop="stdstratumcode" label="标准层号">
-        </el-table-column>
-        <el-table-column prop="topsidedepth" label="顶板埋深">
-        </el-table-column>
-        <el-table-column prop="undersidedepth" label="顶底埋深">
-        </el-table-column>
-        <el-table-column prop="boreheight" label="孔口标高"> </el-table-column>
-        <el-table-column prop="qgenesis" label="地质成因"> </el-table-column>
-        <el-table-column prop="stratumeras" label="地质年代"> </el-table-column>
-        <el-table-column prop="lithology" label="岩性"> </el-table-column>
-      </el-table>
+      <el-tabs v-model="editableTabsValue" type="card">
+        <el-tab-pane
+          v-for="(item, index) in layerInfo"
+          :key="index"
+          :label="item.title"
+          :name="item.name"
+        >
+          <el-table
+            :data="item.tableData"
+            border
+            style="width: 100%"
+            height="350px"
+            :row-class-name="tableRowClassName"
+          >
+            <el-table-column prop="stdstratumcode" label="标准层号">
+            </el-table-column>
+            <el-table-column prop="topsidedepth" label="顶板埋深">
+            </el-table-column>
+            <el-table-column prop="undersidedepth" label="顶底埋深">
+            </el-table-column>
+            <el-table-column prop="boreheight" label="孔口标高">
+            </el-table-column>
+            <el-table-column prop="qgenesis" label="地质成因">
+            </el-table-column>
+            <el-table-column prop="stratumeras" label="地质年代">
+            </el-table-column>
+            <el-table-column prop="lithology" label="岩性"> </el-table-column>
+          </el-table>
+        </el-tab-pane>
+      </el-tabs>
     </div>
   </transition>
 </template>
@@ -42,16 +52,35 @@ export default {
     drillname: {
       type: String,
     },
-    layerInfo: {
-      type: Array,
-    },
     isVisible: {
       type: Boolean,
       default: false,
     },
+    layerInfo: {
+      type: Array,
+      title: {
+        type: String,
+        default: "",
+      },
+      name: {
+        type: String,
+        default: "",
+      },
+      tableData: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
+      default() {
+        return [];
+      },
+    },
   },
   data() {
-    return {};
+    return {
+      editableTabsValue: "1",
+    };
   },
   methods: {
     closeOnClick() {
@@ -68,8 +97,8 @@ export default {
 };
 </script>
 <style >
-  .el-table .warning-row {
-  background: rgb(149,179,175);
+.el-table .warning-row {
+  background: rgb(149, 179, 175);
 }
 
 .el-table .success-row {
@@ -110,8 +139,9 @@ export default {
   position: absolute;
   right: 10px;
   top: 7px;
-  font-size: 20px;
+  font-size: 30px;
   cursor: pointer;
+  z-index: 1;
 }
 /* 动画效果 */
 .holefade-enter-active,
@@ -123,5 +153,4 @@ export default {
   transform: translateX(600px);
   opacity: 0;
 }
-
 </style>
