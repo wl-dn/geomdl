@@ -96,7 +96,6 @@
     <searchBar
       @sendSearchParmsFromSerachBar="receptSearchInfo"
       @sendResultItemFromSearchCompent="receptCommonFromSearchCompent"
-      @sendLayerSearchInfo="receptLayerSearchInfoFromSearchCompent"
       @sendResetInfoEvent="receptResetInfoEvent"
       @sendLayerItemFromSearchCompent="receptLayerItemFromSearchCompent"
     ></searchBar>
@@ -124,6 +123,8 @@ import commonTableBox from "../../components/toolComponents/commonTableInfo.vue"
 import bottomTool from "../../components/cesiumComponents/bottomTool.vue";
 
 import { CesiumUtils } from "../../utils/utils.js";
+import TerrainLoader from "../../utils/cesiumUtils/TerrainLoader.js";
+import ImageryLoader from "../../utils/cesiumUtils/ImageryLoader";
 import { DrawPolygon } from "../../utils/drawUtils";
 import TerrainClipPlan from "../../utils/TerrainClipPlan";
 //引入虚拟钻孔grpc服务 sisi
@@ -308,16 +309,6 @@ export default {
     initCesium() {
       // 初始化地球
       const showWedgit = false;
-      // let tdtUrl = "https://t{s}.tianditu.gov.cn/";
-      const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
-      let tdurl =
-        "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=";
-      this.tiandituTk1;
-      let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
-        url: "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
-        layers: "imgTypeESRIMap",
-      });
-      wmsImageLayer.name = "imgTypeESRIMap";
       viewer = new Cesium.Viewer("cesiumContainer", {
         geocoder: showWedgit, // 地理位置查询定位控件
         homeButton: showWedgit, // 默认相机位置控件
@@ -332,29 +323,7 @@ export default {
         shadows: false,
         infoBox: false, //是否显示信息框
         selectionIndicator: false, //关闭绿色选中框
-
-        // terrainProvider: new Cesium.createWorldTerrain(), // Cesium在线Ion地形,地图上有3d起伏的地形 这一块接口容易失败
-        // terrainProvider: new Cesium.EllipsoidTerrainProvider(), // 不适用地形
-
-        // imageryProvider: new Cesium.SingleTileImageryProvider({
-        //   url: "GlobalBkLayer.jpg",
-        // }), // 简单加载，解决无法加载地图的问题
-        // imageryProvider: new Cesium.WebMapTileServiceImageryProvider({
-        //   // 加载天地图影像
-        //   url: tdurl,
-        //   subdomains: subdomains,
-        //   layer: "tdtImgLayer",
-        //   style: "default",
-        //   format: "image/jpeg",
-        //   //  tileMatrixLabels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"],
-        //   tileMatrixSetID: "GoogleMapsCompatible",
-        //   //  tilingScheme: new Cesium.GeographicTilingScheme(),
-        //   maximumLevel: 15,
-        //   show: true,
-        // }),
-        imageryProvider: this.loadGDLayer(),
-        // imageryProvider: wmsImageLayer,
-
+        imageryProvider: ImageryLoader.loadGDLayer(),
         orderIndependentTranslucency: false,
         contextOptions: {
           webgl: {
@@ -362,9 +331,6 @@ export default {
           },
         },
       });
-      let zjurl =
-        "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
-        this.tiandituTk;
 
       // 修改背景颜色
       viewer.scene.skyBox.show = false;
@@ -374,21 +340,20 @@ export default {
 
       // 关闭光照
       viewer.scene.globe.enableLighting = false; //关闭光照
-      // viewer.scene.undergroundMode = true; //重要，开启地下模式，设置基色透明，这样就看不见黑色地球了
-      // viewer.scene.globe.show = false; //不显示地球，这条和地球透明度选一个就可以
-      // viewer.scene.globe.baseColor = new Cesium.Color(0, 0, 0, 0);
-      // viewer.scene.backgroundcolor = new Cesium.Color(0, 0, 0, 0);
       // 加载三维地形
-      let terrainProvider = new Cesium.CesiumTerrainProvider({
-        url: "http://192.10.3.237:81/tsyTerrain/",
-      });
-      viewer.terrainProvider = terrainProvider;
-
+      new TerrainLoader().loadLocalTerrain(
+        "http://192.10.3.237:81/tsyTerrain/",
+        viewer,
+        true
+      );
       viewer._cesiumWidget._creditContainer.style.display = "none"; //是否显示cesium标识
 
       // 初始化imagelauers
       imageryLayers = viewer.imageryLayers;
-      this.loadTDMapLayer(zjurl, "tdtCiaLayer", true);
+      let TDZJurl =
+        "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
+        this.tiandituTk;
+      // ImageryLoader.loadTDMapLayer(viewer, TDZJurl, "tdtCiaLayer", true);
       let mdlScene = viewer.scene;
 
       // 初始化钻孔层
@@ -409,272 +374,18 @@ export default {
         new Cesium.NearFarScalar(1000.0, 1, 1000000.0, 1);
 
       this.flytochina();
-
-      // 将三维球定位到中国
-      // CesiumUtils.viewCesiumUtils().resetView(
-      //   viewer,
-      //   113.805972,
-      //   27.664014,
-      //   8000000.0
-      // );
-    },
-
-    // 加载wms服务
-    async loadWmsLayer(url, layers, isChecked, label) {
-      // 判断图层是否存在
-      let obj = this.layerIsExist_2(layers);
-      if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
-        isChecked ? this.getGeoServerWmsBoundingBox(url) : 1;
-      } else {
-        let wmsImageLayer = new Cesium.WebMapServiceImageryProvider({
-          url: url,
-          layers: layers,
-          parameters: {
-            transparent: true, //是否透明
-            format: "image/png",
-            VERSION: "1.1.1",
-            srs: "EPSG:4326",
-            service: "WMS",
-            exceptions: "application/vnd.ogc.se_inimage",
-          },
-        });
-        wmsImageLayer.name = layers;
-        wmsImageLayer.label = label;
-        let aa = await wmsImageLayer.readyPromise;
-        console.log("定位");
-        if (imageryLayers) {
-          let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
-          this.getGeoServerWmsBoundingBox(url);
-          // // viewer.flyTo(imgLayer);
-          // imgLayer.getViewableRectangle().then(function (rectangle) {
-          //   console.log(rectangle);
-          //   return camera.flyTo({
-          //     destination: rectangle,
-          //   });
-          // });
-        }
-      }
-    },
-    // 加载ArcGIS服务
-    loadESRILayer(url, layers, isChecked) {
-      // 判断图层是否存在
-      let obj = this.layerIsExist_2(layers);
-      if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
-      } else {
-        let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
-          url: url,
-          layers: layers,
-        });
-        wmsImageLayer.name = layers;
-        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
-      }
-    },
-    // 加载OSM服务
-    loadOSMLayer(url, layers, isChecked) {
-      // 判断图层是否存在
-      let obj = this.layerIsExist_2(layers);
-      if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
-      } else {
-        let wmsImageLayer = new Cesium.OpenStreetMapImageryProvider({
-          url: url,
-          layers: layers,
-        });
-        wmsImageLayer.name = layers;
-        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
-      }
-    },
-    // 加载UTImage服务
-    loadUTLayer(url, layers, isChecked) {
-      // 判断图层是否存在
-      let obj = this.layerIsExist_2(layers);
-      if (obj.flag) {
-        imageryLayers._layers[obj.index].show = isChecked;
-      } else {
-        let wmsImageLayer = new Cesium.UrlTemplateImageryProvider({
-          url: url,
-          layers: layers,
-          tilingScheme: new Cesium.WebMercatorTilingScheme(),
-          minimumLevel: 1,
-          maximumLevel: 20,
-        });
-        wmsImageLayer.name = layers;
-        if (imageryLayers) imageryLayers.addImageryProvider(wmsImageLayer);
-      }
-    },
-    // 加载筛选后的wms服务（零时的）
-    loadSelectWmsLayer(wmsUrl, layer, label, cqlStr, isChecked) {
-      let obj = this.layerIsExist_2("temp" + layer + label);
-      //console.log(imageryLayers);
-      //console.log(obj);
-      if (obj.flag) {
-        for (let i = 0; i < imageryLayers._layers.length; i++) {
-          if (
-            imageryLayers._layers[i].imageryProvider.name ===
-            "temp" + layer + label
-          ) {
-            imageryLayers.remove(imageryLayers._layers[i]);
-            i = -1;
-            if (imageryLayers._layers.length === 1) {
-              return;
-            }
-          }
-        }
-        return;
-      }
-      let parameters = {
-        transparent: true, //是否透明
-        format: "image/png",
-        VERSION: "1.1.1",
-        srs: "EPSG:4326",
-        service: "WMS",
-        styles: "hlight-style", // 添加自定义样式、统一高亮颜色
-        // styles: "point", // 添加自定义样式、统一高亮颜色  这里有个bug线面图层无法适应到面图层
-        exceptions: "application/vnd.ogc.se_inimage",
-      };
-      console.log(cqlStr);
-      // if (cqlStr === "" || label === cqlStr) {
-      parameters.CQL_FILTER = label;
-      // } else {
-      // parameters.CQL_FILTER = label + " and " + cqlStr;
-      // }
-      console.log(parameters);
-      let wmsImageLayer = new Cesium.WebMapServiceImageryProvider({
-        url: wmsUrl,
-        layers: layer,
-        parameters: parameters,
-      });
-      wmsImageLayer.name = "temp" + layer + label;
-      wmsImageLayer.label = "筛选后图层信息";
-      imageryLayers.addImageryProvider(wmsImageLayer);
-      if (imageryLayers) {
-        let imgLayer = imageryLayers.addImageryProvider(wmsImageLayer);
-        this.getGeoServerWmsBoundingBox(wmsUrl);
-      }
-    },
-    // 根据name来判断
-    layerIsExist_2(name) {
-      let flag = false;
-      let index = 0;
-      for (let i = 0; i < imageryLayers._layers.length; i++) {
-        if (imageryLayers._layers[i].imageryProvider.name === name) {
-          flag = true;
-          index = i;
-          break;
-        }
-      }
-      return { flag, index };
-    },
-    loadWfsLayer(url, name, isChecked) {
-      let flagObj = this.kmlSourceIsExist(name);
-      console.log(flagObj);
-      if (flagObj.flag) {
-        // flagObj.dataSource.show = isChecked;
-        imageryLayers.remove(imageryLayers._layers[flagObj.index]);
-        return;
-      }
-      this.$http.get(url).then(async (res) => {
-        // res.data就是真是geojson数据
-        let datasource = await Cesium.GeoJsonDataSource.load(res.data);
-        datasource.name = name;
-        viewer.dataSources.add(datasource);
-        viewer.flyTo(datasource.entities);
-      });
     },
     loadSelectWfsLayer(url, name, isChecked) {
       let flagObj = this.kmlSourceIsExist(name);
       if (flagObj.flag) {
         viewer.dataSources.remove(flagObj.dataSource);
       }
-      this.$http.get(url).then(async (res) => {
-        // res.data就是真是geojson数据
-        let datasource = await Cesium.GeoJsonDataSource.load(res.data);
-        console.log(datasource);
-        datasource.heightReference = Cesium.HeightReference.CLAMP_TO_GROUND;
-        datasource.name = name;
-        viewer.dataSources.add(datasource);
-        // viewer.flyTo(datasource.entities);
-      });
     },
-    loadMapServer(url, isChecked, label) {
-      console.log(url);
-      // 判断图层是否存在
-      let obj = this.layerIsExist(url);
-      if (obj.flag) {
-        // imageryLayers._layers[obj.index].show = isChecked;
-        imageryLayers.remove(imageryLayers._layers[obj.index]);
-      } else {
-        let acrgisImagelayer = new Cesium.ArcGisMapServerImageryProvider({
-          url: url,
-        });
-        acrgisImagelayer.label = label;
-        // viewer.zoomTo(acrgisImagelayer);
-        if (imageryLayers) imageryLayers.addImageryProvider(acrgisImagelayer);
-      }
-    },
-    loadTDMapLayer(url, layers, isChecked) {
-      let obj = this.layerIsExist(url);
-      if (obj.flag) {
-        // imageryLayers._layers[obj.index].show = isChecked;
-        imageryLayers.remove(imageryLayers._layers[obj.index]);
-        return;
-      }
-      const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
-      let wmtsImageLayer = new Cesium.WebMapTileServiceImageryProvider({
-        url: url,
-        subdomains: subdomains,
-        layer: layers,
-        style: "default",
-        format: "image/jpeg",
-        tileMatrixSetID: "GoogleMapsCompatible",
-        show: true,
-      });
-      wmtsImageLayer.name = layers;
-      imageryLayers.addImageryProvider(wmtsImageLayer);
-    },
-    // 加载kml文件
-    loadKmlSource(url, name, isChecked) {
-      // 判断是否加载过kml
-      let flagObj = this.kmlSourceIsExist(name);
-      if (flagObj.flag) {
-        flagObj.dataSource.show = isChecked;
-        return;
-      }
-      let kmlOptions = {
-        camera: viewer.scene.camera,
-        canvas: viewer.scene.canvas,
-        clampToGround: true, // 开启贴地
-      };
-      let geocachePromise = Cesium.KmlDataSource.load(url, kmlOptions);
-      geocachePromise.then((dataSource) => {
-        viewer.flyTo(geocachePromise);
-        dataSource.name = name;
-        viewer.dataSources.add(dataSource);
-      });
-    },
-    selectOnMdlchange(val) {
-      console.log("加载模型");
-      this.mdlName = val;
-      let tempParams = JSON.parse(
-        JSON.stringify(this.$store.getters.getTileMdlTool)
-      );
-      for (let i = 0; i < tileSetList.length; i++) {
-        if (tileSetList[i].name === this.mdlName) {
-          tempParams.longitude = tileSetList[i].longitude;
-          tempParams.latitude = tileSetList[i].latitude;
-          tempParams.height = tileSetList[i].height;
-          this.$store.commit("setTileMdlToolInfo", tempParams);
-        }
-      }
 
-      this.isShowTool = true;
-    },
     // 加载三维模型
     async load3dTiles(url, name, isChecked, label) {
       if (url === "") return;
-      const loadFlagObj = this.judgeIs3DTiles(url);
+      const loadFlagObj = this.judgeIs3DTiles(name);
       if (loadFlagObj.flag) {
         loadFlagObj.tile.show = isChecked;
         return;
@@ -705,32 +416,6 @@ export default {
       tempParams.longitude = mdlCenterParams[1];
       tempParams.latitude = mdlCenterParams[2];
       tempParams.height = mdlCenterParams[0];
-
-      // 根据不同的模型设置不同的位移参数
-      if (name === "3dmdl") {
-        // tempParams.longitude = 113.805972;
-        // tempParams.latitude = 27.664014;
-        // tempParams.height = -1687;
-      } else if (name === "holemdl") {
-        // tempParams.longitude = 113.624622;
-        // tempParams.latitude = 27.849269;
-        // tempParams.height = -1693;
-      } else if (name === "sec1mdl") {
-        // tempParams.longitude = 113.858972;
-        // tempParams.latitude = 27.749514;
-        // tempParams.height = 1165;
-      } else if (name === "sec2mdl") {
-        // tempParams.longitude = 113.988072;
-        // tempParams.latitude = 27.505514;
-        // tempParams.height = 90;
-        // tempParams.height = 1165;
-      } else if (name === "sec3mdl") {
-        // tempParams.longitude = 113.978072;
-        // tempParams.latitude = 27.402714;
-        // tempParams.height = -20;
-        // tempParams.height = 1165;
-      } else {
-      }
 
       // 缓存数据
       tileSetList.push({
@@ -815,36 +500,30 @@ export default {
       //   });
       // });
     },
-    // 获取所有feature
-    processTileFeatures(tile, callback) {
-      let content = tile.content;
-
-      let innerContents = content.innerContents;
-
-      if (Cesium.defined(innerContents)) {
-        let length = innerContents.length;
-
-        for (let i = 0; i < length; ++i) {
-          this.processContentFeatures(innerContents[i], callback);
+    // 模型切换
+    selectOnMdlchange(val) {
+      console.log("加载模型");
+      this.mdlName = val;
+      let tempParams = JSON.parse(
+        JSON.stringify(this.$store.getters.getTileMdlTool)
+      );
+      for (let i = 0; i < tileSetList.length; i++) {
+        if (tileSetList[i].name === this.mdlName) {
+          tempParams.longitude = tileSetList[i].longitude;
+          tempParams.latitude = tileSetList[i].latitude;
+          tempParams.height = tileSetList[i].height;
+          this.$store.commit("setTileMdlToolInfo", tempParams);
         }
-      } else {
-        this.processContentFeatures(content, callback);
       }
-    },
-    processContentFeatures(content, callback) {
-      let featuresLength = content.featuresLength;
 
-      for (let i = 0; i < featuresLength; ++i) {
-        let feature = content.getFeature(i);
-        callback(feature);
-      }
+      this.isShowTool = true;
     },
+
     // 加载广告牌
     async loadHoleLayer(url, name, isChecked) {
-      let flagObj = this.billbordsIsExist(name);
+      let flagObj = ImageryLoader.billbordsIsExist(viewer, name);
       if (flagObj.isChecked) {
         viewer.scene.primitives.remove(flagObj.obj);
-        // flagObj.obj.show = isChecked;
         return;
       }
       //初始化广告牌
@@ -853,7 +532,6 @@ export default {
           scene: viewer.scene,
         })
       );
-      console.log("billboards函数");
       billboards.name = name;
       let holeResult = await this.$http.get(url);
       for (let i = 0; i < holeResult.data.data.length; i++) {
@@ -863,15 +541,6 @@ export default {
         let label = holeResult.data.data[i].borename;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
         if (i === 1) {
-          // viewer.camera.flyTo({   //无法定位到primitivesCollection，折中定位到第一个钻孔点
-          // destination: Cesium.Cartesian3.fromDegrees(lon, lat, 100000.0),
-          // orientation: {
-          //   heading: Cesium.Math.toRadians(40.0),
-          //   pitch: Cesium.Math.toRadians(-35.0),
-          //   roll: 0.0,
-          // },
-          // });
-          // }
           let initialPosition = Cesium.Cartesian3.fromDegrees(
             Number(
               holeResult.data.data[parseInt(holeResult.data.data.length / 2)]
@@ -898,179 +567,12 @@ export default {
           });
         }
         let imgUrl = require("../../assets/images/clusterIcon/hole.png");
-        this.addHolePrimitive(billboards, position, label, imgUrl);
+        ImageryLoader.loadBillboardLayer(billboards, position, label, imgUrl);
       }
-      // viewer.flyTo(billboards);
-    },
-
-    // 加载广告牌（钻孔）
-    addHolePrimitive(billboards, position, label, imgUrl) {
-      // let image = document.createElement("img");
-      // image.src = require("../../assets/images/hole.png");
-      // image.onload = (e) => {
-      // 异步加载的过程
-      billboards.add({
-        position: position,
-        // image: require("../../assets/images/clusterIcon/hole.png"),
-        image: imgUrl,
-        show: true,
-        pixelOffset: new Cesium.Cartesian2(0, 0), // default: (0, 0)
-        eyeOffset: new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
-        horizontalOrigin: Cesium.HorizontalOrigin.CENTER, // default
-        verticalOrigin: Cesium.VerticalOrigin.BOTTOM, // default: CENTER
-        // scale: 2.0, // default: 1.0
-        color: Cesium.Color.LIME, // default: WHITE
-        // rotation: Cesium.Math.PI_OVER_FOUR, // default: 0.0
-        alignedAxis: Cesium.Cartesian3.ZERO, // default
-        // width: 10, // default: undefined
-        // height: 10, // default: undefined
-        scaleByDistance: new Cesium.NearFarScalar(1.5e2, 0.8, 8.0e6, 0.0), //1500米内1.5倍大小，8.0e6外不可见
-        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-        id: label,
-      });
-    },
-
-    /**
-     *  钻孔点位聚合
-     */
-    async getDataSource(url, name, isChecked) {
-      let holeResult = await this.$http.get(url);
-      let self = this;
-      let options = {
-        camera: viewer.scene.camera,
-        canvas: viewer.scene.canvas,
-        clampToGround: true, //开启贴地
-      };
-      let dataSourcePromise = viewer.dataSources.add(
-        new Cesium.CustomDataSource(name)
-      );
-      const clusterIcon = [
-        {
-          src: require("../../assets/images/clusterIcon/blue.png"),
-        },
-        {
-          src: require("../../assets/images/clusterIcon/green.png"),
-        },
-        {
-          src: require("../../assets/images/clusterIcon/yellow.png"),
-        },
-        {
-          src: require("../../assets/images/clusterIcon/orange.png"),
-        },
-        {
-          src: require("../../assets/images/clusterIcon/red.png"),
-        },
-      ];
-      // 创建聚簇点
-      dataSourcePromise.then((dataSource) => {
-        // 创建聚合类的点
-        for (let i = 0; i < holeResult.data.data.length; i++) {
-          let lng = Number(holeResult.data.data[i].borelon);
-          let lat = Number(holeResult.data.data[i].borelat);
-          let height = Number(holeResult.data.data[i].boreheight);
-          let label = holeResult.data.data[i].borename;
-          let entity = dataSource.entities.add({
-            id: "hole" + i,
-            position: Cesium.Cartesian3.fromDegrees(lng, lat),
-            billboard: {
-              image: require("../../assets/images/clusterIcon/hole.png"),
-              width: 32, // 宽高必须设置，否则首次无法聚合
-              height: 38,
-              heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-              horizontalOrigin: Cesium.HorizontalOrigin.CENTER,
-              verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-              id: label,
-            },
-          });
-          entity.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
-          viewer.flyTo(dataSourcePromise);
-        }
-        // 聚合距离，两个点之间小于这个距离就会聚合
-        const pixelRange = 50;
-        // 每个聚合点的最小个数
-        const minimumClusterSize = 10;
-        // 是否开启聚合
-        const enabled = true;
-        dataSource.clustering.enabled = enabled;
-        dataSource.clustering.pixelRange = pixelRange;
-        dataSource.clustering.minimumClusterSize = minimumClusterSize;
-        let removeListener;
-        function customStyle() {
-          if (Cesium.defined(removeListener)) {
-            removeListener();
-            removeListener = undefined;
-          } else {
-            removeListener =
-              dataSource.clustering.clusterEvent.addEventListener(
-                (clusteredEntities, cluster) => {
-                  let len = clusteredEntities.length;
-                  cluster.label.show = true;
-                  cluster.label.text = len + "";
-                  cluster.label.horizontalOrigin =
-                    Cesium.HorizontalOrigin.CENTER;
-                  cluster.label.verticalOrigin = Cesium.VerticalOrigin.CENTER;
-                  cluster.label.disableDepthTestDistance =
-                    Number.POSITIVE_INFINITY;
-                  cluster.label.pixelOffset = new Cesium.Cartesian2(0, -45);
-                  cluster.billboard.show = true;
-                  cluster.billboard.id = cluster.label.id;
-                  cluster.billboard.verticalOrigin =
-                    Cesium.VerticalOrigin.BOTTOM;
-                  cluster.heightReference =
-                    Cesium.HeightReference.CLAMP_TO_GROUND;
-                  if (len >= 100) {
-                    cluster.label.text = "100+";
-                    cluster.label.font = "normal 18px MicroSoft YaHei";
-                    cluster.billboard.image = clusterIcon[4].src; // 聚合效果的背景
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -25);
-                    cluster.billboard.width = 50;
-                    cluster.billboard.height = 50;
-                  } else if (len >= 50) {
-                    cluster.label.font = "normal 30px MicroSoft YaHei";
-                    cluster.billboard.image = clusterIcon[4].src; // 聚合效果的背景
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -25);
-                    cluster.billboard.width = 50;
-                    cluster.billboard.height = 50;
-                  } else if (len >= 40) {
-                    cluster.label.font = "normal 27px MicroSoft YaHei";
-                    cluster.billboard.image = clusterIcon[3].src; // 聚合效果的背景
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -22);
-                    cluster.billboard.width = 45;
-                    cluster.billboard.height = 45;
-                  } else if (len >= 30) {
-                    cluster.label.font = "normal 24px MicroSoft YaHei";
-                    cluster.billboard.image = clusterIcon[2].src; // 聚合效果的背景
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -20);
-                    cluster.billboard.width = 40;
-                    cluster.billboard.height = 40;
-                  } else if (len >= 20) {
-                    cluster.label.font = "normal 20px MicroSoft YaHei";
-                    cluster.billboard.image = clusterIcon[1].src; // 聚合效果的背景
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -17);
-                    cluster.billboard.width = 35;
-                    cluster.billboard.height = 35;
-                  } else {
-                    cluster.label.font = "normal 16px MicroSoft YaHei";
-                    cluster.label.pixelOffset = new Cesium.Cartesian2(1, -15);
-                    cluster.billboard.image = clusterIcon[0].src; // 聚合效果的背景
-                    cluster.billboard.width = 30;
-                    cluster.billboard.height = 30;
-                  }
-                }
-              );
-          }
-          // // force a re-cluster with the new styling
-          let pixelRange = dataSource.clustering.pixelRange;
-          dataSource.clustering.pixelRange = 0;
-          dataSource.clustering.pixelRange = pixelRange;
-        }
-        customStyle();
-      });
-      // viewer.zoomTo(dataSourcePromise)
     },
 
     // 判断三维模型是否存在
-    judgeIs3DTiles(mdlUrl) {
+    judgeIs3DTiles(name) {
       const tilePrimitives = viewer.scene.primitives._primitives;
       if (tilePrimitives.length === 0)
         return {
@@ -1080,7 +582,7 @@ export default {
       for (let i = 0; i < tilePrimitives.length; i++) {
         if (
           tilePrimitives[i] instanceof Cesium.Cesium3DTileset &&
-          tilePrimitives[i]._url === mdlUrl
+          tilePrimitives[i].name === name
         ) {
           return {
             flag: true,
@@ -1092,56 +594,6 @@ export default {
         flag: false,
         tile: null,
       };
-    },
-    // 判断图层是否存在
-    layerIsExist(url) {
-      let flag = false;
-      let index = 0;
-      for (let i = 0; i < imageryLayers._layers.length; i++) {
-        if (imageryLayers._layers[i].imageryProvider.url === url) {
-          flag = true;
-          index = i;
-          break;
-        }
-      }
-      return { flag, index };
-    },
-    // 判断kml有没有加载过
-    kmlSourceIsExist(name) {
-      let flag = false;
-      let dataSource = null;
-      let dataSourceList = viewer.dataSources._dataSources;
-      if (dataSourceList.length === 0) return { flag, dataSource };
-
-      for (let i = 0; i < dataSourceList.length; i++) {
-        if (dataSourceList[i].name === name) {
-          flag = true;
-          dataSource = dataSourceList[i];
-          break;
-        }
-      }
-      return {
-        flag,
-        dataSource,
-      };
-    },
-    // 判断是否加载过billbords
-    billbordsIsExist(name) {
-      let primitivesList = viewer.scene._primitives._primitives;
-      let flagObj = {
-        isChecked: false,
-        obj: null,
-      };
-      for (let i = 0; i < primitivesList.length; i++) {
-        if (
-          primitivesList[i] instanceof Cesium.BillboardCollection &&
-          primitivesList[i].name === name
-        ) {
-          flagObj.isChecked = true;
-          flagObj.obj = primitivesList[i];
-        }
-      }
-      return flagObj;
     },
     // 获取模型的经纬度和拾取高度
     getMdlDegreeCenter(cartographic) {
@@ -1187,9 +639,6 @@ export default {
           Cesium.Matrix4.multiply(tranM, rotateM, resultM);
           Cesium.Matrix4.multiply(resultM, scaleM, resultM);
           tileSetList[i].tileSet.modelMatrix = resultM;
-
-          viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
-            Cesium.Math.clamp(mdlParams.alpha, 0.0, 1.0);
         }
       }
     },
@@ -1215,23 +664,6 @@ export default {
       ctx.fillText(text, (fontsize * 7) / 6, (fontsize * 4) / 3);
       return canvas;
     },
-
-    //复位
-    onClickReset() {
-      if (tileSetList.length === 0) {
-        this.flytochina();
-      } else {
-        viewer.flyTo(tileSetList[0].tileSet, {
-          duration: 1,
-          offset: new Cesium.HeadingPitchRange(
-            0.0,
-            -0.5,
-            tileSetList[0].tileSet.boundingSphere.radius * 4.0
-          ),
-        });
-      }
-    },
-    onClickUnder() {},
 
     // 地形开挖
     dig3DTerrian() {
@@ -1266,6 +698,7 @@ export default {
       }
       this.activeDoubleEvent = false;
     },
+
     // 注册cesium事件
     registerOnclickEvent() {
       if (viewer) {
@@ -1612,9 +1045,10 @@ export default {
                 },
               })
               .then((res) => {
+                this.setColorTable(res.data.data, mhDistance);
                 this.drillName = holecode;
-                console.log(res.data.data);
                 this.layerInfo = res.data.data;
+
                 this.isLayerDialogVisible = true;
                 this.isCommonVisible = false;
               });
@@ -1687,14 +1121,18 @@ export default {
       }
       return -1;
     },
-    loadGDLayer() {
-      let templayer = new Cesium.UrlTemplateImageryProvider({
-        url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
-        minimumLevel: 3,
-        maximumLevel: 16,
-      });
-      templayer.name = "gdlayer";
-      return templayer;
+    // 对应分层变色
+    setColorTable(data, distence) {
+      console.log(data);
+      for (let i = 0; i < data.length; i++) {
+        let topsidedepth = Number(data[i].topsidedepth);
+        let undersidedepth = Number(data[i].undersidedepth);
+        if (distence > topsidedepth && distence < undersidedepth) {
+          data[i].active = true;
+        } else {
+          data[i].active = false;
+        }
+      }
     },
     // 绘制线
     drawLine(leftPoint, secPoint, color) {
@@ -1762,14 +1200,17 @@ export default {
         return 18;
       }
     },
+
+    // 下面是接收来自其他组件的通信
     // 接收二维服务
     recept2dViewInfo(data) {
       if (data.nodeData.serviceType === "wms") {
-        this.loadWmsLayer(
+        ImageryLoader.loadWmsLayer(
+          viewer,
           data.nodeData.url,
           data.nodeData.layers,
-          data.isChecked,
-          data.nodeData.label
+          data.nodeData.label,
+          data.isChecked
         );
       } else if (data.nodeData.serviceType === "Google") {
         this.loadUTLayer(
@@ -1796,19 +1237,23 @@ export default {
           data.isChecked
         );
       } else if (data.nodeData.serviceType === "mapserver") {
-        this.loadMapServer(
+        ImageryLoader.loadArcgisMapServerLayer(
+          viewer,
           data.nodeData.url,
-          data.isChecked,
-          data.nodeData.label
+          data.nodeData.layers,
+          data.nodeData.label,
+          data.isChecked
         );
       } else if (data.nodeData.serviceType === "kml") {
-        this.loadKmlSource(
+        ImageryLoader.loadKmlLayer(
+          viewer,
           data.nodeData.url,
           data.nodeData.name,
           data.isChecked
         );
       } else if (data.nodeData.serviceType === "天地图") {
-        this.loadTDMapLayer(
+        ImageryLoader.loadTDMapLayer(
+          viewer,
           data.nodeData.url,
           data.nodeData.layers,
           data.isChecked
@@ -1820,13 +1265,19 @@ export default {
           data.nodeData.name,
           data.isChecked
         );
-        // this.getDataSource(
-        //   data.nodeData.url,
-        //   data.nodeData.name,
-        //   data.isChecked
-        // );
       } else if (data.nodeData.serviceType === "地形服务") {
-        this.loadTerrain_2(data.nodeData.url, data.isChecked);
+        new TerrainLoader().loadLocalTerrain(
+          data.nodeData.url,
+          viewer,
+          data.isChecked
+        );
+      } else if (data.nodeData.serviceType === "UrlTemplate") {
+        ImageryLoader.loadUrlTemlpateImageryLayer(
+          viewer,
+          data.nodeData.url,
+          data.nodeData.layers,
+          data.isChecked
+        );
       }
     },
     // 接收三维服务
@@ -1912,6 +1363,7 @@ export default {
       //   endTransform: Cesium.Matrix4.IDENTITY,
       // });
     },
+    // 接收线框
     receptWifeinfo(val) {
       for (let i = 0; i < tileSetList.length; i++) {
         if (tileSetList[i].name === this.mdlName) {
@@ -1919,6 +1371,7 @@ export default {
         }
       }
     },
+    // 接收分析结果
     receptFenxiInfo(data) {
       if (data.label === "地形挖掘") {
         this.dig3DTerrian();
@@ -1928,17 +1381,22 @@ export default {
         this.activeDoubleEvent = true;
       }
     },
+    // 接收地球透明
     receptAlphaInfo(alpha) {
-      console.log(alpha);
       viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
         Cesium.Math.clamp(alpha, 0.0, 1.0);
+      // imageryLayers._layers.forEach((element) => {
+      //   if (element.imageryProvider.name === "gdtImgLayer") {
+      //     element.alpha = alpha;
+      //   }
+      // });
     },
+    // 接收地图透明
     receptImageryAlpha(alpha) {
-      console.log("图层透明度");
       for (let i = 0; i < imageryLayers._layers.length; i++) {
         if (
           imageryLayers._layers[i].imageryProvider.name !== "tdtCiaLayer" &&
-          imageryLayers._layers[i].imageryProvider.name !== "vecTypeESRICOC" &&
+          imageryLayers._layers[i].imageryProvider.name !== "gdtImgLayer" &&
           imageryLayers._layers[i].imageryProvider.name !== "vecTypeOSM" &&
           imageryLayers._layers[i].imageryProvider.name !== "imgTypeESRIMap"
         ) {
@@ -1946,10 +1404,10 @@ export default {
         }
       }
     },
-    // 接受来自通用查询
+    // 接收来自通用查询
     async receptSearchInfo(item) {
       // 是否加载钻孔并显示
-      let flagObj = this.billbordsIsExist("holeLayer");
+      let flagObj = ImageryLoader.billbordsIsExist("holeLayer");
       if (flagObj.isChecked && flagObj.obj.show) {
         let billboardsList = flagObj.obj._billboards;
         for (let i = 0; i < billboardsList.length; i++) {
@@ -1984,10 +1442,12 @@ export default {
         }
       }
     },
-    // 接受通用查询
+    // 接收通用查询
     receptCommonFromSearchCompent(item) {
-      console.log(item);
-      let flagObj = this.judgeIsHoleByName(item.label);
+      let flagObj = ImageryLoader.judgeIsExistInLayerByName(
+        this.holeBillbordsLayer,
+        item.label
+      );
       if (flagObj.isChecked) {
         console.log("已显示过");
         this.holeBillbordsLayer.remove(flagObj.obj);
@@ -1997,7 +1457,12 @@ export default {
         let label = item.label;
         const position = Cesium.Cartesian3.fromDegrees(lon, lat);
         let imgUrl = require("../../assets/images/clusterIcon/hole1.png");
-        this.addHolePrimitive(this.holeBillbordsLayer, position, label, imgUrl);
+        ImageryLoader.loadBillboardLayer(
+          this.holeBillbordsLayer,
+          position,
+          label,
+          imgUrl
+        );
         viewer.camera.flyTo({
           destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500),
           orientation: {
@@ -2008,10 +1473,11 @@ export default {
         });
       }
     },
-    // 接受来自图层点击的信息
+    // 接收来自图层点击的信息
     receptLayerItemFromSearchCompent(item) {
       console.log(item);
-      this.loadSelectWmsLayer(
+      ImageryLoader.loadSelectWmsLayer(
+        viewer,
         item.url,
         item.layer,
         item.label,
@@ -2038,28 +1504,7 @@ export default {
         }
       }
     },
-    // 接收来自图层选择的信息
-    receptLayerSearchInfoFromSearchCompent(url, name) {
-      this.loadSelectWfsLayer(url, name);
-    },
-    // 判断是否显示某一个钻孔
-    judgeIsHoleByName(name) {
-      debugger;
-      let flagObj = {
-        isChecked: false,
-        obj: null,
-      };
-      if (!this.holeBillbordsLayer) return flagObj;
-      let billboardsList = this.holeBillbordsLayer._billboards;
-      for (let i = 0; i < billboardsList.length; i++) {
-        if (billboardsList[i].id === name) {
-          flagObj.isChecked = true;
-          flagObj.obj = billboardsList[i];
-          break;
-        }
-      }
-      return flagObj;
-    },
+
     // 获取wms服务图层组的的图层
     getLayerInfoFromLayerGroup(url) {
       this.$http
@@ -2069,41 +1514,6 @@ export default {
         .then((res) => {
           console.log(this.$x2js.xml2js(res.data)); // 将xml解析成json格式，获取所有图层
         });
-    },
-    loadTerrain() {
-      console.log(
-        "viewer.scene.terrainProvider:",
-        viewer.scene.terrainProvider
-      );
-      if (viewer.scene.terrainProvider.hasWaterMask) {
-        let terrain = new Cesium.EllipsoidTerrainProvider();
-        viewer.terrainProvider = terrain;
-      } else {
-        let terrain = new Cesium.createWorldTerrain({
-          requestWaterMask: true,
-          requestVertexNormals: true,
-        });
-        viewer.terrainProvider = terrain;
-      }
-    },
-    // 加载地形
-    loadTerrain_2(url, isChecked) {
-      const scene = viewer.scene;
-      let terrainProvider = null;
-      if (!isChecked) {
-        terrainProvider = new Cesium.EllipsoidTerrainProvider({});
-      } else {
-        terrainProvider = new Cesium.CesiumTerrainProvider({
-          url: url,
-          requestWaterMask: true,
-        });
-        // terrainProvider = new Cesium.createWorldTerrain({
-        //   requestWaterMask: true,
-        //   requestVertexNormals: true,
-        // });
-        console.log(terrainProvider);
-      }
-      scene.terrainProvider = terrainProvider;
     },
 
     /**
@@ -2265,7 +1675,6 @@ export default {
   },
   created() {
     this.onMessageFromComponent(); // 接收其他组件传递过来的值
-    // this.getLayerInfoFromLayerGroup();
   },
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面

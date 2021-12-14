@@ -14,10 +14,12 @@ function resolve(dir) {
 }
 
 module.exports = {
-    // publicPath: process.env.NODE_ENV === 'production' ? '/earth/' : './',
-    publicPath: "./",
+    // publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
+    publicPath: './',
+    // publicPath: '/crccgeo/',
     assetsDir: 'static', // 将所有静态文件集成在static中
-    outputDir: "vue-cesium",
+    // outputDir: "vue-cesium",
+    outputDir: "crccgeo",
     lintOnSave: false,
     filenameHashing: false,
     productionSourceMap: false,

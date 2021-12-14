@@ -12,16 +12,22 @@
       <div class="holeLayer_head_box">
         <span>{{ drillname }}</span>
         <span class="close_span" @click="closeOnClick">×</span>
-      </div> <!--缩小宽度sisi-->
-      <el-table :data="layerInfo" border style="width: 100%" height="350px">
+      </div>
+      <!--缩小宽度sisi-->
+      <el-table
+        :data="layerInfo"
+        border
+        style="width: 100%"
+        height="350px"
+        :row-class-name="tableRowClassName"
+      >
         <el-table-column prop="stdstratumcode" label="标准层号">
         </el-table-column>
         <el-table-column prop="topsidedepth" label="顶板埋深">
         </el-table-column>
         <el-table-column prop="undersidedepth" label="顶底埋深">
         </el-table-column>
-        <el-table-column prop="boreheight" label="孔口标高">
-        </el-table-column>
+        <el-table-column prop="boreheight" label="孔口标高"> </el-table-column>
         <el-table-column prop="qgenesis" label="地质成因"> </el-table-column>
         <el-table-column prop="stratumeras" label="地质年代"> </el-table-column>
         <el-table-column prop="lithology" label="岩性"> </el-table-column>
@@ -51,10 +57,25 @@ export default {
     closeOnClick() {
       this.$emit("sendCloseLayerDialog", false);
     },
+    tableRowClassName({ row, rowIndex }) {
+      console.log(row);
+      if (row.active) {
+        return "warning-row";
+      }
+      return "";
+    },
   },
 };
 </script>
+<style >
+  .el-table .warning-row {
+  background: rgb(149,179,175);
+}
 
+.el-table .success-row {
+  background: #f0f9eb;
+}
+</style>
 <style scoped>
 .holeLayerBox {
   width: 600px;
@@ -102,4 +123,5 @@ export default {
   transform: translateX(600px);
   opacity: 0;
 }
+
 </style>

@@ -39,12 +39,12 @@ export default {
   data() {
     return {
       toolList: [
-        {
-          label: "地球显影",
-          index: 1,
-          iconClass: "icon-diqiu",
-          active: false,
-        },
+        // {
+        //   label: "地球显影",
+        //   index: 1,
+        //   iconClass: "icon-diqiu",
+        //   active: false,
+        // },
         {
           label: "地下空间",
           index: 2,
