@@ -9,6 +9,7 @@
 import ViewCesiumUtils from "./ViewCesiumUtils";
 import DrawUtils from './DrawUtils'
 import TransformUtils from "./TransformUtils";
+import ImageryLoader from "./ImageryLoader";
 export default class CesiumUtils {
     constructor() {
     }
@@ -21,5 +22,8 @@ export default class CesiumUtils {
     static initMap = ViewCesiumUtils.initCesium;
     static transformUtils(modelMatrix, boundingSphereCenter) {
         return new TransformUtils(modelMatrix, boundingSphereCenter);
+    }
+    static imageryLoader() {
+        return  ImageryLoader
     }
 }

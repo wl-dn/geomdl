@@ -398,21 +398,6 @@ export default {
             });
         }
       } else if (index === 2) {
-        // if (this.layerSelectValue === "") return;
-        // let layerItem = this.layerOptions.find((obj) => {
-        //   if (obj.layer === this.layerSelectValue) {
-        //     return obj;
-        //   }
-        // });
-        // let tempLayreItem = JSON.parse(JSON.stringify(layerItem));
-        // if (this.fieldSelectValue !== "" && this.fieldValue !== "") {
-        //   tempLayreItem.cqlStr = `${this.fieldSelectValue} = ${this.fieldValue}`;
-        //   this.$emit("sendLayerSearchInfo", tempLayreItem);
-        //   console.log(tempLayreItem);
-        // } else {
-        //   this.$emit("sendLayerSearchInfo", tempLayreItem);
-        //   console.log(tempLayreItem);
-        // }
         this.searchByTC();
       }
     },
@@ -465,7 +450,6 @@ export default {
 
         this.$emit("sendSearchInfoInwmsLayer", sendData);
       });
-      // this.$emit("sendLayerSearchInfo", url, tempLayreItem.name);
     },
 
     resetOnClick(index) {

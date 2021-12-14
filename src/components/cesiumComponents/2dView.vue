@@ -14,7 +14,7 @@
       show-checkbox
       node-key="id"
       :default-expanded-keys="['1', '2', '3', '4', '5', '6', '7', '8']"
-      :default-checked-keys="['7-1']"
+      :default-checked-keys="['6-1','6-2', '7-1']"
       @check-change="handleCheckChange"
       @check="handleCheck"
       @node-contextmenu="handleContextMenu"
@@ -54,7 +54,7 @@ export default {
                   label: "区域地质图(株洲幅)",
                   name: "mapserver_geomap",
                   url: "https://tsy-gis1.portal.com/server/rest/services/geoinfo_geomap/MapServer/",
-                  layers: "",
+                  layers: "mapserver_geomap",
                   serviceType: "mapserver",
                 },
               ],
@@ -293,19 +293,19 @@ export default {
             },
           ],
         },
-        {
-          id: "4",
-          label: "KMZ",
-          children: [
-            {
-              id: "4-1",
-              label: "株洲",
-              name: "zhuzhou",
-              url: "KMZ/zhuzhou.kmz",
-              serviceType: "kml",
-            },
-          ],
-        },
+        // {
+        //   id: "4",
+        //   label: "KMZ",
+        //   children: [
+        //     {
+        //       id: "4-1",
+        //       label: "株洲",
+        //       name: "zhuzhou",
+        //       url: "KMZ/zhuzhou.kmz",
+        //       serviceType: "kml",
+        //     },
+        //   ],
+        // },
         // {
         //   id: "5",
         //   label: "CZML",
@@ -320,16 +320,14 @@ export default {
           id: "6",
           label: "影像服务",
           children: [
-            // {
-            //   id: "6-1",
-            //   label: "天地图影像",
-            //   name: "TDMap",
-            //   url:
-            //     "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
-            //     this.tiandituTk,
-            //   layers: "tdtImgLayer",
-            //   serviceType: "天地图",
-            // },
+            {
+              id: "6-1",
+              label: "高德影像",
+              name: "gdlayer",
+              url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+              layers: "gdtImgLayer",
+              serviceType: "UrlTemplate",
+            },
             {
               id: "6-2",
               label: "天地图注记",
@@ -339,41 +337,7 @@ export default {
               name: "TDMark",
               layers: "tdtCiaLayer",
               serviceType: "天地图",
-            },
-            // {
-            //   id: "6-3",
-            //   label: "谷歌影像",
-            //   url:
-            //     "http://www.google.cn/maps/vt?lyrs=s@800&x={x}&y={y}&z={z}",
-            //   name: "GoogleUTMap",
-            //   layers: "imgTypeGoogle",
-            //   serviceType: "Google",
-            // },
-            // {
-            //   id: "6-4",
-            //   label: "ESRI影像",
-            //   url:
-            //     "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
-            //   name: "ESRIMap",
-            //   layers: "imgTypeESRIMap",
-            //   serviceType: "ESRI",
-            // },
-            {
-              id: "6-5",
-              label: "ESRI街道图",
-              url: "http://cache1.arcgisonline.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer",
-              name: "ESRIMapCOC",
-              layers: "vecTypeESRICOC",
-              serviceType: "ESRI",
-            },
-            {
-              id: "6-6",
-              label: "OSM",
-              url: "https://a.tile.openstreetmap.org/",
-              name: "OSMMap",
-              layers: "vecTypeOSM",
-              serviceType: "OSM",
-            },
+            }
           ],
         },
         {
