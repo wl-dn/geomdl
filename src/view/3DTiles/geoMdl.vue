@@ -311,8 +311,8 @@ export default {
       // let tdtUrl = "https://t{s}.tianditu.gov.cn/";
       const subdomains = ["0", "1", "2", "3", "4", "5", "6", "7"];
       let tdurl =
-        "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=" +
-        this.tiandituTk;
+        "http://t{s}.tianditu.com/img_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=img&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default&format=tiles&tk=";
+      this.tiandituTk1;
       let wmsImageLayer = new Cesium.ArcGisMapServerImageryProvider({
         url: "http://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer",
         layers: "imgTypeESRIMap",
@@ -326,7 +326,7 @@ export default {
         sceneModePicker: showWedgit, // 切换2D、3D和Columbus View（CV）模式
         fullscreenButton: showWedgit, // 全屏控件
         creditsDisplay: showWedgit, //展示商标版权和数据源
-        // scene3DOnly: true, // 每个几何实例仅以3D渲染以节省GPU内存.与sceneModePiker不能共存
+        scene3DOnly: true, // 每个几何实例仅以3D渲染以节省GPU内存.与sceneModePiker不能共存
         baseLayerPicker: showWedgit, // 底图切换控件
         animation: showWedgit, // 控制场景动画的播放速度控件
         shadows: false,
@@ -346,13 +346,14 @@ export default {
         //   layer: "tdtImgLayer",
         //   style: "default",
         //   format: "image/jpeg",
+        //   //  tileMatrixLabels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"],
         //   tileMatrixSetID: "GoogleMapsCompatible",
+        //   //  tilingScheme: new Cesium.GeographicTilingScheme(),
+        //   maximumLevel: 15,
         //   show: true,
         // }),
-        imageryProvider: wmsImageLayer,
-        // imageryProvider: new Cesium.UrlTemplateImageryProvider({
-        //   url: "https://a.tiles.mapbox.com/v4/mapbox.satellite/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiemhlbmdwIiwiYSI6ImNrNzQ1aXRvaDAwcWkzaW5rYnBjMjd0eDMifQ.tImrPlywXxmGepuX6lo8kg",
-        // }),
+        imageryProvider: this.loadGDLayer(),
+        // imageryProvider: wmsImageLayer,
 
         orderIndependentTranslucency: false,
         contextOptions: {
@@ -1690,7 +1691,7 @@ export default {
       let templayer = new Cesium.UrlTemplateImageryProvider({
         url: "https://webst02.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
         minimumLevel: 3,
-        maximumLevel: 18,
+        maximumLevel: 16,
       });
       templayer.name = "gdlayer";
       return templayer;

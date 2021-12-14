@@ -41,8 +41,8 @@ Vue.prototype.$http = axios;
 
 // 配置天地图token
 // Vue.prototype.tiandituTk = "59e1f33a85b33bcf1b27dea77be6b96d";
-// Vue.prototype.tiandituTk = "5f8b46b7f8a09d5964eb1b9fea223c93";
-Vue.prototype.tiandituTk = "aed99c44fe1f061f7d646a52aa42ae6b";
+Vue.prototype.tiandituTk = "5f8b46b7f8a09d5964eb1b9fea223c93";
+// Vue.prototype.tiandituTk = "aed99c44fe1f061f7d646a52aa42ae6b";
 
 
 

@@ -69,16 +69,18 @@ const routes = [
         path: "/threeClip3DTiles",
         component: threeClip3DTiles
       },
-      {
-        path: "/mdlScene",
-        component: mdlScene
-      }
+
     ]
+  },
+  {
+    path: "/mdlScene",
+    component: mdlScene
   }
 ]
 
 const router = new VueRouter({
-  mode: 'hash',
+  mode: 'history',
+  // mode: 'hash',
   base: process.env.BASE_URL,
   routes
 })
