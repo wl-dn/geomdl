@@ -13,8 +13,8 @@
       :data="treeData"
       show-checkbox
       node-key="id"
-      :default-expanded-keys="['1', '2', '3', '4', '5', '6', '7', '8']"
-      :default-checked-keys="['6-1','6-2', '7-1']"
+      :default-expanded-keys="['1','1-1', '1-2','2', '2-1','3', '4', '5', '6', '7', '8']"
+      :default-checked-keys="['6-1', '6-2', '7-1']"
       @check-change="handleCheckChange"
       @check="handleCheck"
       @node-contextmenu="handleContextMenu"
@@ -44,10 +44,12 @@ export default {
         {
           id: "1",
           label: "ArcGIS Server",
+          disabled: true,
           children: [
             {
               id: "1-1",
               label: "MapServer",
+              disabled: true,
               children: [
                 {
                   id: "1-1-1",
@@ -62,6 +64,7 @@ export default {
             {
               id: "1-2",
               label: "WmsServer",
+              disabled: true,
               children: [
                 {
                   id: "1-2-1",
@@ -92,10 +95,12 @@ export default {
         {
           id: "2",
           label: "GeoServer",
+          disabled: true,
           children: [
             {
               id: "2-1",
               label: "WmsServer",
+              disabled: true,
               children: [
                 {
                   id: "2-1-1",
@@ -254,6 +259,7 @@ export default {
         {
           id: "3",
           label: "KML",
+          disabled: true,
           children: [
             {
               id: "3-1",
@@ -319,6 +325,7 @@ export default {
         {
           id: "6",
           label: "影像服务",
+          disabled: true,
           children: [
             {
               id: "6-1",
@@ -337,12 +344,13 @@ export default {
               name: "TDMark",
               layers: "tdtCiaLayer",
               serviceType: "天地图",
-            }
+            },
           ],
         },
         {
           id: "7",
           label: "地形服务",
+          disabled: true,
           children: [
             {
               id: "7-1",
@@ -407,12 +415,12 @@ export default {
   height: 400px;
   overflow-y: scroll;
 }
-.el-tree >>> .el-tree-node .is-leaf + .el-checkbox .el-checkbox__inner {
+/* .el-tree >>> .el-tree-node .is-leaf + .el-checkbox .el-checkbox__inner {
   display: inline-block;
 }
 .el-tree >>> .el-tree-node .el-checkbox .el-checkbox__inner {
   display: none;
-}
+} */
 
 /* 设置滚动条的样式 */
 ::-webkit-scrollbar {

@@ -331,7 +331,6 @@ export default {
           },
         },
       });
-
       // 修改背景颜色
       viewer.scene.skyBox.show = false;
       viewer.scene.sun.show = false;
@@ -340,12 +339,7 @@ export default {
 
       // 关闭光照
       viewer.scene.globe.enableLighting = false; //关闭光照
-      // 加载三维地形
-      new TerrainLoader().loadLocalTerrain(
-        "http://192.10.3.237:81/tsyTerrain/",
-        viewer,
-        true
-      );
+
       viewer._cesiumWidget._creditContainer.style.display = "none"; //是否显示cesium标识
 
       // 初始化imagelauers
@@ -353,7 +347,7 @@ export default {
       let TDZJurl =
         "http://t{s}.tianditu.com/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={TileMatrix}&TileRow={TileRow}&TileCol={TileCol}&style=default.jpg&tk=" +
         this.tiandituTk;
-      // ImageryLoader.loadTDMapLayer(viewer, TDZJurl, "tdtCiaLayer", true);
+      //  ImageryLoader.loadTDMapLayer(viewer, TDZJurl, "tdtCiaLayer", true);
       let mdlScene = viewer.scene;
 
       // 初始化钻孔层
@@ -368,6 +362,7 @@ export default {
       // 是否开启深度检测深度检测
       mdlScene.globe.depthTestAgainstTerrain = true;
 
+      mdlScene.globe.baseColor = Cesium.Color.BLACK;
       // // 开启地下透明
       mdlScene.globe.translucency.enabled = true; // 开启地表透明
       mdlScene.globe.translucency.frontFaceAlphaByDistance =
@@ -1205,13 +1200,25 @@ export default {
     // 接收二维服务
     recept2dViewInfo(data) {
       if (data.nodeData.serviceType === "wms") {
-        ImageryLoader.loadWmsLayer(
-          viewer,
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.nodeData.label,
-          data.isChecked
-        );
+        if (data.nodeData.children) {
+          for (let i = 0; i < data.nodeData.children.length; i++) {
+            ImageryLoader.loadWmsLayer(
+              viewer,
+              data.nodeData.children[i].url,
+              data.nodeData.children[i].layers,
+              data.nodeData.children[i].label,
+              data.isChecked
+            );
+          }
+        } else {
+          ImageryLoader.loadWmsLayer(
+            viewer,
+            data.nodeData.url,
+            data.nodeData.layers,
+            data.nodeData.label,
+            data.isChecked
+          );
+        }
       } else if (data.nodeData.serviceType === "Google") {
         this.loadUTLayer(
           data.nodeData.url,
@@ -1385,11 +1392,6 @@ export default {
     receptAlphaInfo(alpha) {
       viewer.scene.globe.translucency.frontFaceAlphaByDistance.nearValue =
         Cesium.Math.clamp(alpha, 0.0, 1.0);
-      // imageryLayers._layers.forEach((element) => {
-      //   if (element.imageryProvider.name === "gdtImgLayer") {
-      //     element.alpha = alpha;
-      //   }
-      // });
     },
     // 接收地图透明
     receptImageryAlpha(alpha) {
@@ -1678,6 +1680,12 @@ export default {
   },
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面
+    // 加载三维地形
+    new TerrainLoader().loadLocalTerrain(
+      "http://192.10.3.237:81/tsyTerrain/",
+      viewer,
+      true
+    );
     this.registerOnclickEvent();
     // let a = CesiumUtils.drawUtils(viewer);
     // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);
@@ -1751,7 +1759,7 @@ export default {
 
 .mdlTool_box {
   position: fixed;
-  top: 160px;
+  top: 105px;
   right: 100px;
 }
 </style>

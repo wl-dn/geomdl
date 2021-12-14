@@ -171,7 +171,7 @@ export default class ImageryLoader {
         viewer.camera.setView({
             destination: rectangle
         })
-      
+
     }
 
     // 加载kml
@@ -291,6 +291,10 @@ export default class ImageryLoader {
         });
         templayer.name = layerName;
         viewer.imageryLayers.addImageryProvider(templayer)
+        let tempLayerResult = ImageryLoader.wmsLayerIsExist(viewer, 'gdtImgLayer')
+        viewer.imageryLayers.lowerToBottom(tempLayerResult.obj);
+        console.log(1);
+
     }
     static loadGDLayer() {
         let templayer = new Cesium.UrlTemplateImageryProvider(
@@ -301,6 +305,7 @@ export default class ImageryLoader {
             }
         );
         templayer.name = "gdtImgLayer";
+
         return templayer;
     }
     // 加载天地图
