@@ -86,9 +86,8 @@
 
     <!-- 通用盒子显示信息 -->
     <commonTableBox
-      :tableData="tableCommonData"
+      :dataTabs="tableCommonData"
       :isCommonVisible="isCommonVisible"
-      :tableTheme="tableTitleTheme"
       @sendCommonCloseInfo="isCommonVisible = false"
     ></commonTableBox>
 
@@ -221,12 +220,11 @@ export default {
       isvirtualLayerDialogVisible: false,
       virtualLayerInfo: [],
       fieldsList: [],
-      virtualTableTheme: null, //设置表格title sisi
+      virtualTableTheme: null, //设置表格title
 
       // 通用盒子信息
       isCommonVisible: false,
       tableCommonData: [],
-      tableTitleTheme: null, //设置表格title sisi
 
       // 地层厚度
       layerThickness: [4.3, 7.2, 3.4, 5.8, 10.0, 3.9, 3.7, 4.5],
@@ -832,36 +830,44 @@ export default {
                 // 只有显示的并且是geoserver和arcgisserver的可以用
                 // 确定哪个图层可查
                 let tempImageryProvider = this.getQueryImageryProvider();
-                if (!tempImageryProvider) return;
-                if (tempImageryProvider.ready) {
-                  xy = tempImageryProvider.tilingScheme.positionToTileXY(
-                    cartographic,
-                    level,
-                    xy
-                  );
-                  let promise = tempImageryProvider.pickFeatures(
-                    xy.x,
-                    xy.y,
-                    level,
-                    cartographic.longitude,
-                    cartographic.latitude
-                  );
-                  Cesium.when(promise, (layerInfo) => {
-                    this.tableCommonData = [];
-                    const properList = layerInfo[0].properties;
-                    console.log(properList);
-                    let obj = null;
-                    this.tableTitleTheme = tempImageryProvider.label;
-                    for (let k in properList) {
-                      obj = {
-                        label: k,
-                        value: properList[k],
-                      };
-                      this.tableCommonData.push(obj);
-                    }
-                    this.isCommonVisible = true;
-                    this.isLayerDialogVisible = false;
-                  });
+                if (!tempImageryProvider.length) return;
+                let searchRes = [];
+                this.tableCommonData = [];
+                for (const tmpImgProvider of tempImageryProvider) {
+                  if (tmpImgProvider.ready) {
+                    xy = tmpImgProvider.tilingScheme.positionToTileXY(
+                      cartographic,
+                      level,
+                      xy
+                    );
+                    let promise = tmpImgProvider.pickFeatures(
+                      xy.x,
+                      xy.y,
+                      level,
+                      cartographic.longitude,
+                      cartographic.latitude
+                    );
+                    Cesium.when(promise, (layerInfo) => {
+                      let tmpArr = [];
+                      const properList = layerInfo[0].properties;
+                      console.log(properList);
+                      let obj = null;
+                      this.tableTitleTheme = tmpImgProvider.label;
+                      for (let k in properList) {
+                        obj = {
+                          label: k,
+                          value: properList[k],
+                        };
+                        tmpArr.push(obj);
+                      }
+                      if (tmpArr.length) {
+                        let count = this.tableCommonData.length;
+                        this.tableCommonData.push({title:tmpImgProvider.label,name:++count+'',tableData:tmpArr});
+                        this.isCommonVisible = true;
+                        this.isLayerDialogVisible = false;                        
+                      }
+                    });
+                  }                  
                 }
               }
             }
@@ -1078,29 +1084,35 @@ export default {
           } else if (
             pickedFeature.tileset._url === "3DTiles/model_3dtiles/tileset.json"
           ) {
-            this.tableCommonData = [];
             let titles = "地层编码";
-            this.tableTitleTheme = "模型分层信息"; //设置表格title sisi
             let resStr = pickedFeature.getProperty("地层编码");
-            let obj = {
+            let obj = [{
               label: titles,
               value: resStr,
-            };
-            this.tableCommonData.push(obj);
-            this.isCommonVisible = true;
-            this.isLayerDialogVisible = false;
+            }];
+            if (obj.length) {
+              this.tableCommonData = [];
+              let count = this.tableCommonData.length;
+              this.tableCommonData.push({title:'模型分层信息',name:++count+'',tableData:obj});
+              this.isCommonVisible = true;
+              this.isLayerDialogVisible = false;             
+            }
           } else {
             this.tableCommonData = [];
+            let tmp = [];
             let propertyList = pickedFeature.getPropertyNames();
             for (let i = 0; i < propertyList.length; i++) {
               let obj = {
                 label: propertyList[i],
                 value: pickedFeature.getProperty(propertyList[i]),
               };
-              this.tableTitleTheme = "地层信息"; //设置表格title sisi
-              this.tableCommonData.push(obj);
+              tmp.push(obj);
+            }
+            if (tmp.length) {
               this.isCommonVisible = true;
               this.isLayerDialogVisible = false;
+              let count = this.tableCommonData.length;
+              this.tableCommonData.push({title:'地层信息',name:++count+'',tableData:tmp});
             }
           }
           return 1;
@@ -1144,15 +1156,16 @@ export default {
     // 获取能够查询imageryProvider
     getQueryImageryProvider() {
       let tempImagerys = imageryLayers._layers;
+      let imgArr = [];
       for (let i = 0; i < tempImagerys.length; i++) {
         let url = tempImagerys[i].imageryProvider.url;
         if (
           this.activeImageUrl.indexOf(url) >= 0 &&
           tempImagerys[i].show === true
         )
-          return tempImagerys[i].imageryProvider;
+        imgArr.push(tempImagerys[i].imageryProvider);
       }
-      return null;
+      return imgArr;
     },
     getMapLevel(height) {
       if (height > 48000000) {

@@ -9,8 +9,25 @@
 <template>
   <transition name="fade">
     <div class="commonTableBox" v-if="isCommonVisible">
-      <div class="head_box">
-        {{tableTheme}} <!--添加表名 sisi-->
+      <el-tabs v-model="editableTabsValue" type="card">
+        <el-tab-pane
+          v-for="(item, index) in dataTabs"
+          :key="index"
+          :label="item.title"
+          :name="item.name"
+        >
+          <div class="content_box">
+            <table>
+              <tr v-for="(item2, row) in item.tableData" :key="row">
+                <td>{{ item2.label }}</td>
+                <td>{{ item2.value }}</td>
+              </tr>
+            </table>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+      <!-- <div class="head_box">
+        {{tableTheme}}
         <span class="close_span" @click="closeOnClick">×</span>
       </div>
       <div class="content_box">
@@ -20,7 +37,7 @@
             <td>{{ item.value }}</td>
           </tr>
         </table>
-      </div>
+      </div> -->
     </div>
   </transition>
 </template>
@@ -28,23 +45,45 @@
 <script>
 export default {
   props: {
-    tableData: {
-      type: Array,
-      default() {
-        return [];
+    dataTabs:{
+      type:Array,
+      title:{ 
+        type: String,
+        default: "",
       },
+      name:{ 
+        type: String,
+        default: "",
+      },
+      tableData: {
+        type: Array,
+        default() {
+          return [];
+        },
+      },
+      default(){
+        return [];
+      }
     },
+    // tableData: {
+    //   type: Array,
+    //   default() {
+    //     return [];
+    //   },
+    // },
     isCommonVisible: {
       type: Boolean,
       default: false,
     },
-    tableTheme: { //添加表名sisi
-      type: String,
-      default: "",
-    }
+    // tableTheme: { 
+    //   type: String,
+    //   default: "",
+    // }
   },
   data() {
-    return {};
+    return {
+      editableTabsValue: '1',
+    };
   },
   methods: {
     closeOnClick() {
@@ -79,6 +118,9 @@ export default {
   width: 100%;
   height: 350px;
   overflow-y: auto;
+}
+.el-tabs__header{
+  margin: 0 !important;
 }
 .commonTableBox table {
   width: 100%;
