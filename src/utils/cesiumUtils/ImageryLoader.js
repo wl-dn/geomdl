@@ -29,6 +29,7 @@ export default class ImageryLoader {
                 service: "WMS",
                 exceptions: "application/vnd.ogc.se_inimage",
             },
+            maximumLevel: 21
         })
         wmsImageLayer.name = layerName;
         wmsImageLayer.label = label;
@@ -75,6 +76,7 @@ export default class ImageryLoader {
             url: url,
             layers: layer,
             parameters: parameters,
+            maximumLevel: 21
         });
         wmsImageLayer.name = "temp" + layer + label;
         wmsImageLayer.label = "筛选后图层信息";
@@ -163,6 +165,7 @@ export default class ImageryLoader {
         }
         let arcgImageLayer = new Cesium.ArcGisMapServerImageryProvider({
             url: url,
+            maximumLevel: 21
         })
         arcgImageLayer.name = layerName;
         arcgImageLayer.label = label;
@@ -292,7 +295,6 @@ export default class ImageryLoader {
         viewer.imageryLayers.addImageryProvider(templayer)
         let tempLayerResult = ImageryLoader.wmsLayerIsExist(viewer, 'gdtImgLayer')
         viewer.imageryLayers.lowerToBottom(tempLayerResult.obj);
-        console.log(1);
 
     }
     static loadGDLayer() {

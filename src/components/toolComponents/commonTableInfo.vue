@@ -10,20 +10,43 @@
   <transition name="fade">
     <div class="commonTableBox" v-if="isCommonVisible">
       <span class="close_span" @click="closeOnClick">×</span>
-      <el-tabs v-model="editableTabsValue" type="card">
+      <el-tabs v-model="TabsValue" type="card" @tab-click="tabClick">
         <el-tab-pane
           v-for="(item, index) in dataTabs"
           :key="index"
           :label="item.title"
           :name="item.name"
         >
-          <div class="content_box">
+          <div class="content_box" v-if="item.tableType === 1">
             <table>
               <tr v-for="(item2, row) in item.tableData" :key="row">
                 <td>{{ item2.label }}</td>
                 <td>{{ item2.value }}</td>
               </tr>
             </table>
+          </div>
+          <div class="content_box_2" v-else-if="item.tableType === 2">
+            <el-table
+              :data="item.tableData"
+              border
+              style="width: 100%"
+              height="350px"
+              :row-class-name="tableRowClassName"
+            >
+              <el-table-column prop="stdstratumcode" label="标准层号">
+              </el-table-column>
+              <el-table-column prop="topsidedepth" label="顶板埋深">
+              </el-table-column>
+              <el-table-column prop="undersidedepth" label="顶底埋深">
+              </el-table-column>
+              <el-table-column prop="boreheight" label="孔口标高">
+              </el-table-column>
+              <el-table-column prop="qgenesis" label="地质成因">
+              </el-table-column>
+              <el-table-column prop="stratumeras" label="地质年代">
+              </el-table-column>
+              <el-table-column prop="lithology" label="岩性"> </el-table-column>
+            </el-table>
           </div>
         </el-tab-pane>
       </el-tabs>
@@ -62,6 +85,10 @@ export default {
           return [];
         },
       },
+      tableType: {
+        type: Number,
+        default: 1,
+      },
       default() {
         return [];
       },
@@ -76,27 +103,63 @@ export default {
       type: Boolean,
       default: false,
     },
+    editableTabsValue: {
+      type: String,
+      default: "1",
+    },
     // tableTheme: {
     //   type: String,
     //   default: "",
     // }
   },
+  watch: {
+    editableTabsValue: {
+      deep: true,
+      handler: function (newV) {
+        this.TabsValue = this.editableTabsValue;
+        console.log(this.TabsValue);
+      },
+    },
+  },
   data() {
     return {
-      editableTabsValue: "1",
+      TabsValue: "1",
     };
   },
   methods: {
     closeOnClick() {
       this.$emit("sendCommonCloseInfo", false);
     },
+    tabClick(tab) {
+      this.$emit("sendCommonTabNameInfo", tab.name);
+    },
+    tableRowClassName({ row, rowIndex }) {
+      console.log(row);
+      if (row.active) {
+        return "warning-row";
+      }
+      return "";
+    },
   },
-
 };
 </script>
 <style>
 .el-tabs__header {
   margin: 0 0 5px !important;
+}
+.el-table .warning-row {
+  background: rgb(149, 179, 175);
+}
+
+.el-table .success-row {
+  background: #f0f9eb;
+}
+.el-tabs__nav-scroll {
+  background-color: rgb(144, 147, 153)!important;
+  
+}
+.el-tabs__item.is-active {
+  color: white!important;
 }
 </style>
 <style scoped>
@@ -125,6 +188,11 @@ export default {
   box-sizing: border-box;
 }
 .commonTableBox .content_box {
+  width: 100%;
+  height: 350px;
+  overflow-y: auto;
+}
+.commonTableBox .content_box_2 {
   width: 100%;
   height: 350px;
   overflow-y: auto;

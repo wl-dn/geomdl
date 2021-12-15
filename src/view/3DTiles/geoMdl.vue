@@ -73,6 +73,8 @@
       :layerInfo="layerInfo"
       :isVisible="isLayerDialogVisible"
       @sendCloseLayerDialog="isLayerDialogVisible = false"
+      @sendCommonTabNameInfo="receptCommonTabNameInfo"
+      :editableTabsValue="editableTabsValue"
     ></holeLayerInfo>
 
     <!-- 虚拟钻孔 -->
@@ -82,6 +84,8 @@
       :isVisible="isvirtualLayerDialogVisible"
       :tableTheme="virtualTableTheme"
       @sendCloseVirtualDialog="isvirtualLayerDialogVisible = false"
+      @sendCommonTabNameInfo="receptCommonTabNameInfo"
+      :editableTabsValue="editableTabsValue"
     ></virtualBox>
 
     <!-- 通用盒子显示信息 -->
@@ -89,6 +93,8 @@
       :dataTabs="tableCommonData"
       :isCommonVisible="isCommonVisible"
       @sendCommonCloseInfo="isCommonVisible = false"
+      :editableTabsValue="editableTabsValue"
+      @sendCommonTabNameInfo="receptCommonTabNameInfo"
     ></commonTableBox>
 
     <!--  搜索框 -->
@@ -231,6 +237,8 @@ export default {
 
       //钻孔聚类监听对象
       removeListener: undefined,
+
+      editableTabsValue: "1",
     };
   },
   components: {
@@ -796,7 +804,11 @@ export default {
             if (this.get3DTilesFeature(movement) > -1) return;
             let pick = viewer.scene.pick(movement.position);
 
-            console.log("钻孔查询");
+            this.tableCommonData = [];
+            this.editableTabsValue = "1";
+            this.isLayerDialogVisible = false;
+            this.isCommonVisible = false;
+            let count = 0;
             //获取钻孔信息
             if (Cesium.defined(pick) && Cesium.defined(pick.id)) {
               this.$http
@@ -806,16 +818,30 @@ export default {
                   },
                 })
                 .then((res) => {
-                  this.layerInfo = [];
-                  let count = this.layerInfo.length;
-                  this.drillName = pick.id;
-                  this.layerInfo.push({
+                  console.log("钻孔点选查询");
+
+                  let count = this.tableCommonData.length;
+
+                  this.tableCommonData.push({
                     title: pick.id,
                     name: ++count + "",
+                    tableType: 2,
                     tableData: res.data.data,
                   });
-                  this.isLayerDialogVisible = true;
-                  this.isCommonVisible = false;
+                  this.isCommonVisible = true;
+                  this.isLayerDialogVisible = false;
+
+                  // this.layerInfo = [];
+                  // let count = this.layerInfo.length;
+                  // this.drillName = pick.id;
+                  // this.editableTabsValue = "1";
+                  // this.layerInfo.push({
+                  //   title: pick.id,
+                  //   name: ++count + "",
+                  //   tableData: res.data.data,
+                  // });
+                  // this.isLayerDialogVisible = true;
+                  // this.isCommonVisible = false;
                 });
             }
 
@@ -838,8 +864,6 @@ export default {
                 let tempImageryProvider = this.getQueryImageryProvider();
                 console.log(tempImageryProvider);
                 if (!tempImageryProvider.length) return;
-                let searchRes = [];
-                this.tableCommonData = [];
                 for (const tmpImgProvider of tempImageryProvider) {
                   if (tmpImgProvider.ready) {
                     xy = tmpImgProvider.tilingScheme.positionToTileXY(
@@ -855,10 +879,9 @@ export default {
                       cartographic.latitude
                     );
                     Cesium.when(promise, (layerInfo) => {
+                      console.log("服务点选查询");
                       let tmpArr = [];
                       const properList = layerInfo[0].properties;
-                      console.log(layerInfo);
-                      console.log(properList);
                       let obj = null;
                       this.tableTitleTheme = tmpImgProvider.label;
                       for (let k in properList) {
@@ -870,9 +893,12 @@ export default {
                       }
                       if (tmpArr.length) {
                         let count = this.tableCommonData.length;
+                        // this.editableTabsValue = "1";
+
                         this.tableCommonData.push({
                           title: tmpImgProvider.label,
                           name: ++count + "",
+                          tableType: 1,
                           tableData: tmpArr,
                         });
                         this.isCommonVisible = true;
@@ -915,6 +941,7 @@ export default {
               //查询虚拟钻孔信息  sisi
               this.virtualLayerInfo = [];
               let count = this.virtualLayerInfo.length;
+              this.editableTabsValue = "1";
               let tableData = [
                 {
                   topElevation: 1,
@@ -1084,6 +1111,7 @@ export default {
                 this.setColorTable(res.data.data, mhDistance);
 
                 this.drillName = holecode;
+                this.editableTabsValue = "1";
                 // this.layerInfo = res.data.data;
                 console.log(count);
                 this.layerInfo.push({
@@ -1136,10 +1164,12 @@ export default {
             if (obj.length) {
               this.tableCommonData = [];
               let count = this.tableCommonData.length;
+              this.editableTabsValue = "1";
               this.tableCommonData.push({
                 title: "模型分层信息",
                 name: ++count + "",
                 tableData: obj,
+                tableType: 1,
               });
               this.isCommonVisible = true;
               this.isLayerDialogVisible = false;
@@ -1158,11 +1188,13 @@ export default {
             if (tmp.length) {
               this.isCommonVisible = true;
               this.isLayerDialogVisible = false;
+              this.editableTabsValue = "1";
               let count = this.tableCommonData.length;
               this.tableCommonData.push({
                 title: "地层信息",
                 name: ++count + "",
                 tableData: tmp,
+                tableType: 1,
               });
             }
           }
@@ -1212,7 +1244,8 @@ export default {
         let name = tempImagerys[i].imageryProvider.name;
         if (
           this.activeImageryNameSet.has(name) &&
-          tempImagerys[i].show === true
+          tempImagerys[i].show === true &&
+          name.indexOf("temp") === -1
         )
           imgArr.push(tempImagerys[i].imageryProvider);
       }
@@ -1545,7 +1578,6 @@ export default {
     },
     // 接收来自图层点击的信息
     receptLayerItemFromSearchCompent(item) {
-      
       ImageryLoader.loadSelectWmsLayer(
         viewer,
         item.url,
@@ -1705,7 +1737,9 @@ export default {
         currentFeature.primitive.color = Cesium.Color.ORANGERED;
       }
     },
-
+    receptCommonTabNameInfo(name) {
+      this.editableTabsValue = name;
+    },
     /**获取geoserver的wms范围
      * @param url wms服务地址
      */

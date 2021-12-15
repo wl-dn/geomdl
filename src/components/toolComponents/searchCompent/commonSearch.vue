@@ -627,12 +627,16 @@ export default {
   created() {
     eventVue.$on("sendTree2DViewInfoByEventBus", (res) => {
       console.log(res);
-      this.fieldOptions = [];
-      this.fieldValue = "";
-      this.layerSelectValue = "";
-      this.fieldSelectValue = "";
-      this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
-      this.$emit("sendResetInfoEvent", 2);
+      console.log(this.radio);
+      if (this.radio === "2") {
+        this.fieldOptions = [];
+        this.fieldValue = "";
+        this.layerSelectValue = "";
+        this.fieldSelectValue = "";
+        this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
+        this.$emit("sendResetInfoEvent", 2);
+      }
+
       let tempList = res.nodeData;
       let isChecked = res.isChecked;
       if (tempList.serviceType === "wms") {

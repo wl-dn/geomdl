@@ -11,10 +11,10 @@
     <div class="virtualBox" v-if="isVisible">
       <!-- <div class="virtualBox_head_box">
         {{ tableTheme }} -->
-        <!--sisi  设置表名-->
-        <span class="close_span" @click="closeOnClick">×</span>
+      <!--sisi  设置表名-->
+      <span class="close_span" @click="closeOnClick">×</span>
       <!-- </div> -->
-      <el-tabs v-model="editableTabsValue" type="card">
+      <el-tabs v-model="TabsValue" type="card" @tab-click="tabClick">
         <el-tab-pane
           v-for="(item, index) in virtualLayerInfo"
           :key="index"
@@ -79,16 +79,31 @@ export default {
       type: String,
       default: "",
     },
+    editableTabsValue: {
+      type: String,
+      default: "1",
+    },
+  },
+  watch: {
+    editableTabsValue: {
+      deep: true,
+      handler: function (newV) {
+        this.TabsValue = this.editableTabsValue;
+      },
+    },
   },
   data() {
     return {
-      editableTabsValue: "1",
+      TabsValue: "1",
     };
   },
   methods: {
     closeOnClick() {
       this.$emit("sendCloseVirtualDialog", false);
     },
+      tabClick(tab) {
+       this.$emit("sendCommonTabNameInfo", tab.name);
+    }
   },
 };
 </script>

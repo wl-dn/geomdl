@@ -9,10 +9,9 @@
 <template>
   <transition name="holefade">
     <div class="holeLayerBox" v-if="isVisible">
-
       <span class="close_span" @click="closeOnClick">×</span>
       <!--缩小宽度sisi-->
-      <el-tabs v-model="editableTabsValue" type="card">
+      <el-tabs v-model="TabsValue" type="card" @tab-click="tabClick">
         <el-tab-pane
           v-for="(item, index) in layerInfo"
           :key="index"
@@ -76,11 +75,24 @@ export default {
         return [];
       },
     },
+    editableTabsValue: {
+      type: String,
+      default: "1",
+    },
   },
   data() {
     return {
-      editableTabsValue: "1",
+      TabsValue:"1"
     };
+  },
+  watch: {
+    editableTabsValue: {
+      deep: true,
+      handler: function (newV) {
+        this.TabsValue = this.editableTabsValue;
+        console.log(this.TabsValue);
+      },
+    },
   },
   methods: {
     closeOnClick() {
@@ -93,6 +105,9 @@ export default {
       }
       return "";
     },
+    tabClick(tab) {
+       this.$emit("sendCommonTabNameInfo", tab.name);
+    }
   },
 };
 </script>
@@ -125,16 +140,7 @@ export default {
   padding-left: 3px;
   box-sizing: border-box;
 }
-.holelayer_table {
-  width: 100%;
-}
-.holelayer_table tr td {
-  height: 30px;
-}
-.holelayer_table tr td:nth-child(1) {
-  width: 30%;
-  background-color: cornflowerblue;
-}
+
 .close_span {
   position: absolute;
   right: 10px;
