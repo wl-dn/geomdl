@@ -72,8 +72,7 @@
         v-show="isShowSearchBox === false"
         @click="isShowSearchBox = true"
         class="el-icon-search"
-        ></span
-      >
+      ></span>
     </div>
   </div>
 </template>
@@ -164,6 +163,8 @@ export default {
             label: data[i].label,
             value: "",
             cqlStr: data[i].cqlStr,
+            lon: data[i].lon,
+            lat: data[i].lat,
             active: false,
             type: 2,
           };

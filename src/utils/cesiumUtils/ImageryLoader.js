@@ -1,6 +1,8 @@
 import * as Cesium from "cesium"
 import axios from "axios";
 import X2JS from 'x2js';
+
+import ViewCesiumUtils from "./ViewCesiumUtils"
 export default class ImageryLoader {
     constructor() {
 
@@ -12,10 +14,20 @@ export default class ImageryLoader {
    * @param label 标签
    */
     static loadWmsLayer(viewer, url, layerName, label, isChecked) {
+        let rectangle = Cesium.Rectangle.fromDegrees(
+            Number(112.999997),
+            Number(27.333333),
+            Number(114.000001),
+            Number(28.000057)
+        );
         let result = ImageryLoader.wmsLayerIsExist(viewer, layerName);
         if (result.flag) {
             result.obj.show = isChecked;
-            isChecked ? ImageryLoader.setWmsView(viewer, url) : 1;
+            // isChecked ? ImageryLoader.setWmsView(viewer, url) : 1;
+            isChecked ? viewer.camera.setView({
+                destination: rectangle
+            }) : 1;
+
             return
         }
         let wmsImageLayer = new Cesium.WebMapServiceImageryProvider({
@@ -34,11 +46,21 @@ export default class ImageryLoader {
         wmsImageLayer.name = layerName;
         wmsImageLayer.label = label;
         viewer.imageryLayers.addImageryProvider(wmsImageLayer)
-        ImageryLoader.setWmsView(viewer, url)
+        // ImageryLoader.setWmsView(viewer, url)
+        viewer.camera.setView({
+            destination: rectangle
+        })
     }
     // 加载筛选后的wms服务
-    static loadSelectWmsLayer(viewer, url, layer, label, cqlStr, isChecked) {
+    static loadSelectWmsLayer(viewer, url, layer, label, cqlStr, lon, lat, isChecked) {
+        console.log(lon, lat);
         let imageryLayers = viewer.imageryLayers
+        let rectangle = Cesium.Rectangle.fromDegrees(
+            Number(112.999997),
+            Number(27.333333),
+            Number(114.000001),
+            Number(28.000057)
+        );
         let obj = ImageryLoader.wmsLayerIsExist(viewer, "temp" + layer + label);
         if (obj.flag) {
             for (let i = 0; i < imageryLayers._layers.length; i++) {
@@ -81,8 +103,18 @@ export default class ImageryLoader {
         wmsImageLayer.name = "temp" + layer + label;
         wmsImageLayer.label = "筛选后图层信息";
         imageryLayers.addImageryProvider(wmsImageLayer);
-        ImageryLoader.setWmsView(viewer, url);
-
+        // ImageryLoader.setWmsView(viewer, url);
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(lon, lat, 22000),
+            orientation: {
+                heading: Cesium.Math.toRadians(348.4202942851978),  // 朝向 代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
+                pitch: Cesium.Math.toRadians(-89.74026687972041),   // 俯仰角 代表镜头上下方向,正值为上,负值为下.            
+                roll: Cesium.Math.toRadians(0), //代表镜头左右倾斜.正值,向右倾斜,负值向左倾斜
+            },
+            complete: function callback() {
+                // 定位完成之后的回调函数
+            },
+        });
     }
     /**wmsLayer是否存在
     * @param layerName 图层名

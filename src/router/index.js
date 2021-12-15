@@ -24,7 +24,7 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/scene',
+    path: '/',
     name: 'scene',
     component: scene,
     // redirect: "/scene",

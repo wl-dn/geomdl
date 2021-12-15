@@ -437,19 +437,22 @@ export default {
         let featureList = res.data.features;
         for (let i = 0; i < featureList.length; i++) {
           for (let k in featureList[i].properties) {
+            console.log(featureList[i].properties);
             if (k.indexOf("id") >= 0) {
               let obj = {
                 url: tempLayreItem.wmsUrl,
                 layer: tempLayreItem.layer,
                 cqlStr: cqlStr,
                 label: `${k}=${featureList[i].properties[k]}`,
+                lon: featureList[i].geometry.coordinates[0][0][0][0],
+                lat: featureList[i].geometry.coordinates[0][0][0][1],
               };
               sendData.push(obj);
               break;
             }
           }
         }
-
+        console.log(sendData);
         this.$emit("sendSearchInfoInwmsLayer", sendData);
       });
     },

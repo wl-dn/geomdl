@@ -395,8 +395,8 @@ export default {
       let tileSet = new Cesium.Cesium3DTileset({
         url: url,
         //控制切片视角显示的数量，可调整性能
-        maximumScreenSpaceError: 2,
-        maximumNumberOfLoadedTiles: 50,
+        // maximumScreenSpaceError: 2,
+        // maximumNumberOfLoadedTiles: 50,
       });
       const tileset = await tileSet.readyPromise;
       tileset.name = name;
@@ -476,22 +476,7 @@ export default {
           -21.34390550872461,
           0.0716951918898415
         );
-        // viewer.scene.camera.setView({
-        //   destination: initialPosition,
-        //   orientation: initialOrientation,
-        //   endTransform: Cesium.Matrix4.IDENTITY,
-        // });
         viewer.zoomTo(tileSet, initialOrientation);
-        // CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
-        // viewer.zoomTo(
-        //   tileSet,
-        //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
-        // );
-        // CesiumUtils.viewCesiumUtils().changeTerrainAlpha(viewer, 0.1);
-        // viewer.zoomTo(
-        //   tileSet,
-        //   new Cesium.HeadingPitchRange(0.0, -0.5, tileSet.boundingSphere.radius)
-        // );
       }
 
       // 注册模型事件
@@ -812,21 +797,30 @@ export default {
             //获取钻孔信息
             if (Cesium.defined(pick) && Cesium.defined(pick.id)) {
               this.$http
-                .get("/getHoleLayerInfoByHoleCode", {
+                .get("/getHoleInfoByHoleCode", {
                   params: {
-                    holecode: pick.id,
+                    holeCode: pick.id,
                   },
                 })
                 .then((res) => {
                   console.log("钻孔点选查询");
-
+                  let tempData = res.data.data[0];
+                  let tempArr = [];
+                  let obj = null;
+                  for (let k in tempData) {
+                    obj = {
+                      label: k,
+                      value: tempData[k],
+                    };
+                    tempArr.push(obj);
+                  }
                   let count = this.tableCommonData.length;
 
                   this.tableCommonData.push({
                     title: pick.id,
                     name: ++count + "",
-                    tableType: 2,
-                    tableData: res.data.data,
+                    tableType: 1,
+                    tableData: tempArr,
                   });
                   this.isCommonVisible = true;
                   this.isLayerDialogVisible = false;
@@ -1081,6 +1075,7 @@ export default {
       console.log("pickedFeature:", pickedFeature);
       console.log("rightClickHighted:", rightClickHighted);
       pickedFeature.color = Cesium.Color.BLUE;
+      console.log(pickedFeature);
       // let pickedFeature = viewer.scene.pick(movement.position);
       if (Cesium.defined(pickedFeature)) {
         if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
@@ -1584,6 +1579,8 @@ export default {
         item.layer,
         item.label,
         item.cqlStr,
+        item.lon,
+        item.lat,
         item.active
       );
       this.activeImageryNameSet.add("temp" + item.layer + item.label);

@@ -13,19 +13,7 @@
       :data="treeData"
       show-checkbox
       node-key="id"
-      :default-expanded-keys="[
-        '1',
-        '1-1',
-        '1-2',
-        '2',
-        '2-1',
-        '3',
-        '4',
-        '5',
-        '6',
-        '7',
-        '8',
-      ]"
+      :default-expanded-keys="['2', '2-1', '3', '4', '5', '6', '7', '8']"
       :default-checked-keys="['6-1', '6-2', '7-1']"
       @check-change="handleCheckChange"
       @check="handleCheck"
@@ -55,262 +43,171 @@ export default {
       },
       treeData: [
         {
-          id: "1",
-          label: "ArcGIS Server",
-          disabled: true,
-          children: [
-            {
-              id: "1-1",
-              label: "MapServer",
-              disabled: true,
-              children: [
-                {
-                  id: "1-1-1",
-                  label: "区域地质图(株洲幅)",
-                  name: "mapserver_geomap",
-                  url: "https://tsy-gis1.portal.com/server/rest/services/geoinfo_geomap/MapServer/",
-                  layers: "mapserver_geomap",
-                  serviceType: "mapserver",
-                },
-              ],
-            },
-            {
-              id: "1-2",
-              label: "WmsServer",
-              disabled: true,
-              children: [
-                {
-                  id: "1-2-1",
-                  label: "区域地质图(株洲幅)",
-                  name: "wmsserver_arc_geomap",
-                  url: "https://tsy-gis1.portal.com/server/services/geoinfo_geomap/MapServer/WMSServer",
-                  layers: "1,2,3,4,5,6",
-                  serviceType: "wms",
-                },
-              ],
-            },
-            // {
-            //   id: "1-3",
-            //   label: "WfsServer",
-            //   children: [
-            //     {
-            //       id: "1-3-1",
-            //       label: "区域地质图(株洲幅)",
-            //       name: "wfsserver_arc_geomap",
-            //       url: "https://tsy-gis1.portal.com/server/rest/services/Hosted/geoinfo_geomap/MapServer?f=pjson",
-            //       layers: "",
-            //       serviceType: "wfs",
-            //     },
-            //   ],
-            // },
-          ],
-        },
-        {
           id: "2",
-          label: "GeoServer",
+          label: "地质信息服务",
           disabled: true,
           children: [
             {
-              id: "2-1",
-              label: "WmsServer",
-              disabled: true,
+              id: "2-1-1",
+              label: "区域地质图(株洲幅)",
+              name: "geoserver_wms_geomap",
+              url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+              layers: "crcc-dev:geomap-01",
+
+              // url:"http://10.101.140.3/geoserver/db-24/wms",
+              // layers:"map-124",
+              // layers:"map_124_lyr_1",
+              serviceType: "wms",
               children: [
                 {
-                  id: "2-1-1",
-                  label: "区域地质图(株洲幅)",
-                  name: "geoserver_wms_geomap",
+                  id: "2-1-1-1",
+                  label: "地层（岩体）分布",
+                  layers: "geostratumzone",
+                  name: "geostratumzone",
                   url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                  layers: "crcc-dev:geomap-01",
-
-                  // url:"http://10.101.140.3/geoserver/db-24/wms",
-                  // layers:"map-124",
-                  // layers:"map_124_lyr_1",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geostratumzone&outputFormat=application/json",
+                  value: "geostratumzone",
                   serviceType: "wms",
-                  children: [
-                    {
-                      id: "2-1-1-1",
-                      label: "地层（岩体）分布",
-                      layers: "geostratumzone",
-                      name: "geostratumzone",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geostratumzone&outputFormat=application/json",
-                      value: "geostratumzone",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-1-2",
-                      label: "围岩蚀变地层",
-                      layers: "aterationp",
-                      name: "aterationp",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:aterationp&outputFormat=application/json",
-                      value: "aterationp",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-1-3",
-                      label: "地层界线分布",
-                      layers: "geoboundzone",
-                      name: "geoboundzone",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geoboundzone&outputFormat=application/json",
-                      value: "geoboundzone",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-1-4",
-                      label: "断层构造分布",
-                      layers: "faultzone",
-                      name: "faultzone",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:faultzone&outputFormat=application/json",
-                      value: "faultzone",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-1-5",
-                      label: "产状点",
-                      layers: "occurrence",
-                      name: "occurrence",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:occurrence&outputFormat=application/json",
-                      value: "occurrence",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-1-6",
-                      label: "围岩蚀变点",
-                      layers: "alterationt",
-                      name: "alterationt",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:alterationt&outputFormat=application/json",
-                      value: "alterationt",
-                      serviceType: "wms",
-                    },
-                  ],
                 },
                 {
-                  id: "2-1-2",
-                  label: "长赣-遥感解译",
-                  name: "changgan_wms+geo",
-                  url: "http://192.10.3.237/geoserver/wms",
+                  id: "2-1-1-2",
+                  label: "围岩蚀变地层",
+                  layers: "aterationp",
+                  name: "aterationp",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
                   attrUrl:
-                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=geomap-rs&outputFormat=application/json",
-                  layers: "geomap-rs",
-                  value: "geomap-rs",
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:aterationp&outputFormat=application/json",
+                  value: "aterationp",
                   serviceType: "wms",
-                  children: [
-                    {
-                      id: "2-1-2-1",
-                      label: "地形地貌",
-                      layers: "landform",
-                      name: "landform",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:landform&outputFormat=application/json",
-                      value: "landform",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-2-2",
-                      label: "矿产开发及采空区",
-                      layers: "minegoaf",
-                      name: "minegoaf",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:minegoaf&outputFormat=application/json",
-                      value: "minegoaf",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-2-3",
-                      label: "特殊岩体",
-                      layers: "specialrocksoil",
-                      name: "specialrocksoil",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:specialrocksoil&outputFormat=application/json",
-                      value: "specialrocksoil",
-                      serviceType: "wms",
-                    },
-                    {
-                      id: "2-1-2-4",
-                      label: "不良地质",
-                      layers: "unfavorablegeology",
-                      name: "unfavorablegeology",
-                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
-                      attrUrl:
-                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:faultzone&outputFormat=application/json",
-                      value: "unfavorablegeology",
-                      serviceType: "wms",
-                    },
-                  ],
+                },
+                {
+                  id: "2-1-1-3",
+                  label: "地层界线分布",
+                  layers: "geoboundzone",
+                  name: "geoboundzone",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geoboundzone&outputFormat=application/json",
+                  value: "geoboundzone",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-1-4",
+                  label: "断层构造分布",
+                  layers: "faultzone",
+                  name: "faultzone",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:faultzone&outputFormat=application/json",
+                  value: "faultzone",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-1-5",
+                  label: "产状点",
+                  layers: "occurrence",
+                  name: "occurrence",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:occurrence&outputFormat=application/json",
+                  value: "occurrence",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-1-6",
+                  label: "围岩蚀变点",
+                  layers: "alterationt",
+                  name: "alterationt",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:alterationt&outputFormat=application/json",
+                  value: "alterationt",
+                  serviceType: "wms",
                 },
               ],
             },
-            // {  WFSServer要么像WMS调好，要么就直接删掉不要 sisi
-            //   id: "2-2",
-            //   label: "WfsServer",
-            //   children: [
-            //     {
-            //       label: "地层界限分布",
-            //       name: "dicengjiexian_wfs_geomap",
-            //       url: "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geoboundzone&maxFeatures=50&outputFormat=application/json",
-            //       layers: "",
-            //       serviceType: "wfs",
-            //     },
-            //   ],
-            // },
+            {
+              id: "2-1-2",
+              label: "长赣-遥感解译",
+              name: "changgan_wms+geo",
+              url: "http://192.10.3.237/geoserver/wms",
+              attrUrl:
+                "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=geomap-rs&outputFormat=application/json",
+              layers: "geomap-rs",
+              value: "geomap-rs",
+              serviceType: "wms",
+              children: [
+                {
+                  id: "2-1-2-1",
+                  label: "地形地貌",
+                  layers: "landform",
+                  name: "landform",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:landform&outputFormat=application/json",
+                  value: "landform",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-2-2",
+                  label: "矿产开发及采空区",
+                  layers: "minegoaf",
+                  name: "minegoaf",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:minegoaf&outputFormat=application/json",
+                  value: "minegoaf",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-2-3",
+                  label: "特殊岩体",
+                  layers: "specialrocksoil",
+                  name: "specialrocksoil",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:specialrocksoil&outputFormat=application/json",
+                  value: "specialrocksoil",
+                  serviceType: "wms",
+                },
+                {
+                  id: "2-1-2-4",
+                  label: "不良地质",
+                  layers: "unfavorablegeology",
+                  name: "unfavorablegeology",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  attrUrl:
+                    "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:faultzone&outputFormat=application/json",
+                  value: "unfavorablegeology",
+                  serviceType: "wms",
+                },
+              ],
+            },
           ],
         },
+        // {  WFSServer要么像WMS调好，要么就直接删掉不要 sisi
+        //   id: "2-2",
+        //   label: "WfsServer",
+        //   children: [
+        //     {
+        //       label: "地层界限分布",
+        //       name: "dicengjiexian_wfs_geomap",
+        //       url: "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geoboundzone&maxFeatures=50&outputFormat=application/json",
+        //       layers: "",
+        //       serviceType: "wfs",
+        //     },
+        //   ],
+        // },
+
         {
-          id: "3",
-          label: "KML",
-          disabled: true,
-          children: [
-            {
-              id: "3-1",
-              label: "可研报批版-赣州段-(赣州北水东设站方案-绕避戒毒所)",
-              name: "kml_1",
-              url: "KML/kml_1.kml",
-              serviceType: "kml",
-            },
-            {
-              id: "3-2",
-              label:
-                "可研报批版-赣州段-(赣州北水东设站方案-绕避戒毒所右线绕行)",
-              name: "kml_2.kml",
-              url: "KML/kml_2.kml",
-              serviceType: "kml",
-            },
-            {
-              id: "3-3",
-              label: "可研报批版-井冈山段-(替换桥隧表)",
-              name: "kml_3.kml",
-              url: "KML/kml_3.kml",
-              serviceType: "kml",
-            },
-            {
-              id: "3-4",
-              label: "可研报批版-萍乡段-(萍乡北并站方案替换桥隧表)",
-              name: "kml_4.kml",
-              url: "KML/kml_4.kml",
-              serviceType: "kml",
-            },
-            {
-              id: "3-5",
-              label: "可研报批版-长沙段-(机场负三层、浏阳北设站方案)",
-              name: "kml_5.kml",
-              url: "KML/kml_5.kml",
-              serviceType: "kml",
-            },
-          ],
+          id: "8",
+          label: "钻孔点位",
+          url: "/getAllHoleInfo",
+          // url: "holeinfo.json",
+          name: "holeLayer",
+          layer: "",
+          serviceType: "billboards",
         },
         // {
         //   id: "4",
@@ -360,6 +257,51 @@ export default {
             },
           ],
         },
+
+        {
+          id: "3",
+          label: "线位",
+          disabled: true,
+          children: [
+            {
+              id: "3-1",
+              label: "可研报批版-赣州段-(赣州北水东设站方案-绕避戒毒所)",
+              name: "kml_1",
+              url: "KML/kml_1.kml",
+              serviceType: "kml",
+            },
+            {
+              id: "3-2",
+              label:
+                "可研报批版-赣州段-(赣州北水东设站方案-绕避戒毒所右线绕行)",
+              name: "kml_2.kml",
+              url: "KML/kml_2.kml",
+              serviceType: "kml",
+            },
+            {
+              id: "3-3",
+              label: "可研报批版-井冈山段-(替换桥隧表)",
+              name: "kml_3.kml",
+              url: "KML/kml_3.kml",
+              serviceType: "kml",
+            },
+            {
+              id: "3-4",
+              label: "可研报批版-萍乡段-(萍乡北并站方案替换桥隧表)",
+              name: "kml_4.kml",
+              url: "KML/kml_4.kml",
+              serviceType: "kml",
+            },
+            {
+              id: "3-5",
+              label: "可研报批版-长沙段-(机场负三层、浏阳北设站方案)",
+              name: "kml_5.kml",
+              url: "KML/kml_5.kml",
+              serviceType: "kml",
+            },
+          ],
+        },
+
         {
           id: "7",
           label: "地形服务",
@@ -374,13 +316,55 @@ export default {
           ],
         },
         {
-          id: "8",
-          label: "钻孔",
-          url: "/getAllHoleInfo",
-          // url: "holeinfo.json",
-          name: "holeLayer",
-          layer: "",
-          serviceType: "billboards",
+          id: "1",
+          label: "地质信息服务(ArcGisServer)",
+          disabled: true,
+          children: [
+            {
+              id: "1-1",
+              label: "MapServer",
+              disabled: true,
+              children: [
+                {
+                  id: "1-1-1",
+                  label: "区域地质图(株洲幅)",
+                  name: "mapserver_geomap",
+                  url: "https://tsy-gis1.portal.com/server/rest/services/geoinfo_geomap/MapServer/",
+                  layers: "mapserver_geomap",
+                  serviceType: "mapserver",
+                },
+              ],
+            },
+            {
+              id: "1-2",
+              label: "WmsServer",
+              disabled: true,
+              children: [
+                {
+                  id: "1-2-1",
+                  label: "区域地质图(株洲幅)",
+                  name: "wmsserver_arc_geomap",
+                  url: "https://tsy-gis1.portal.com/server/services/geoinfo_geomap/MapServer/WMSServer",
+                  layers: "1,2,3,4,5,6",
+                  serviceType: "wms",
+                },
+              ],
+            },
+            // {
+            //   id: "1-3",
+            //   label: "WfsServer",
+            //   children: [
+            //     {
+            //       id: "1-3-1",
+            //       label: "区域地质图(株洲幅)",
+            //       name: "wfsserver_arc_geomap",
+            //       url: "https://tsy-gis1.portal.com/server/rest/services/Hosted/geoinfo_geomap/MapServer?f=pjson",
+            //       layers: "",
+            //       serviceType: "wfs",
+            //     },
+            //   ],
+            // },
+          ],
         },
       ],
       currentChecked: false,
