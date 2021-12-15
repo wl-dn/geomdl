@@ -3,34 +3,21 @@
     <div class="map-coordinates">
       <span
         id="cd_label"
-        style="
-          font-size: 13px;
-          text-align: center;
-          font-family: 微软雅黑;
-          color: #edffff;
-        "
         v-show="isActiveSpan"
         >暂无坐标信息</span
       >
       <span
         id="cd_label"
-        style="
-          font-size: 13px;
-          text-align: center;
-          font-family: 微软雅黑;
-          color: #edffff;
-        "
         v-show="!isActiveSpan"
       >
-        经度：{{ commonCesiumInfos.lng }} &nbsp;&nbsp;&nbsp;&nbsp;纬度：{{
+        经度：{{ commonCesiumInfos.lng }} 纬度：{{
           commonCesiumInfos.lat
         }}
-        &nbsp;&nbsp;&nbsp;&nbsp; 海拔高度：{{ commonCesiumInfos.height }}米
-        &nbsp;&nbsp;&nbsp;&nbsp; 视点高度：{{
+        海拔高度：{{ commonCesiumInfos.height }}米
+        视点高度：{{
           commonCesiumInfos.ViewpointsHeight
-        }}米 &nbsp;&nbsp;&nbsp;&nbsp; 方向：{{ commonCesiumInfos.heading }}度
-        &nbsp;&nbsp;&nbsp;&nbsp; 俯仰角：{{ commonCesiumInfos.pitch }}度
-        &nbsp;&nbsp;&nbsp;&nbsp;
+        }}米 方向：{{ commonCesiumInfos.heading }}度
+         俯仰角：{{ commonCesiumInfos.pitch }}度
       </span>
     </div>
     <div class="slidebox">
@@ -154,7 +141,7 @@ export default {
   /* position: absolute; */
 
   text-align: center;
-  width: 150px;
+  width: 5%;
   height: 30px;
   line-height: 30px;
 }
@@ -164,19 +151,20 @@ export default {
   background: none;
   position: fixed;
   bottom: -4px;
-  left: 780px;
+  /* left: 780px; */
+  right: 0;
 }
 .cesium-performanceDisplay-defaultContainer > div :nth-child(1) {
   color: bule;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 13px;
   font-family: sans-serif;
 }
 .cesium-performanceDisplay-defaultContainer > div :nth-child(2) {
   color: red;
   margin-left: 20px;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 13px;
   font-family: sans-serif;
 }
 </style>
@@ -190,22 +178,31 @@ export default {
   bottom: 0;
   right: 0;
   font-family: sans-serif !important;
-  font-size: 14px;
+  font-size: 13px;
   z-index: 1;
+}
+.map-coordinates{
+  width: 50%;
+}
+#cd_label{
+  /* font-size: 13px; */
+  text-align: center;
+  font-family: 微软雅黑;
+  color: #edffff;
 }
 .slidebox {
   position: absolute;
-  right: 500px;
+  right: 30%;
   bottom: 0px;
-  width: 200px;
+  width: 10%;
   height: 30px;
   line-height: 30px;
 }
 .slidebox1 {
   position: absolute;
-  right: 100px;
+  right: 12%;
   bottom: 0px;
-  width: 200px;
+  width: 10%;
   height: 30px;
   line-height: 30px;
 }
@@ -214,7 +211,7 @@ export default {
   height: 30px;
   position: absolute;
   color: white;
-  left: -110px;
+  left: -100px;
   line-height: 30px;
   top: 3px;
 }
