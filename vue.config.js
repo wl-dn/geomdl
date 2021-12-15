@@ -8,7 +8,7 @@
  */
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
-
+const px2rem = require('postcss-px2rem')
 function resolve(dir) {
     return path.join(__dirname, dir);
 }
