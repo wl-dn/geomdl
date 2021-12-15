@@ -24,7 +24,7 @@ Vue.use(VueRouter)
 
 const routes = [
   {
-    path: '/',
+    path: '/scene',
     name: 'scene',
     component: scene,
     // redirect: "/scene",
@@ -79,10 +79,10 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'hash',
-  base: process.env.BASE_URL,
-  // mode: 'history',
-  // base: "/crccgeo/",
+  // mode: 'hash',
+  // base: process.env.BASE_URL,
+  mode: 'history',
+  base: "/crccgeo/",
   routes
 })
 
