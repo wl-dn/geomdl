@@ -13,6 +13,10 @@ function resolve(dir) {
     return path.join(__dirname, dir);
 }
 
+const postcss = px2rem({
+    remUnit: 16   //基准大小 baseSize，需要和rem.js中相同
+})
+
 module.exports = {
     // publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
     publicPath: '/crccgeo/',
@@ -56,6 +60,13 @@ module.exports = {
                     }
                 }
             ]
+        }
+    },
+    css: {
+        loaderOptions: {
+            postcss: {
+            plugins: [postcss]
+            }
         }
     }
 }
