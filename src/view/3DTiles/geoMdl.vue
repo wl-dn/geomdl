@@ -217,7 +217,7 @@ export default {
       flagTimer: null, // 区分单击和双击
 
       //虚拟钻孔
-      isvirtualLayerDialogVisible: true,
+      isvirtualLayerDialogVisible: false,
       virtualLayerInfo: [],
       fieldsList: [],
       virtualTableTheme: null, //设置表格title
