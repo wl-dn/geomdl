@@ -244,6 +244,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geostratumzone&maxFeatures=10000&outputFormat=application/json",
           value: "geostratumzone",
+          dataType: 1,
         },
         {
           label: "围岩蚀变地层",
@@ -254,6 +255,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:aterationp&maxFeatures=10000&outputFormat=application/json",
           value: "aterationp",
+          dataType: 1,
         },
         {
           label: "地层界线分布",
@@ -264,6 +266,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geoboundzone&maxFeatures=10000&outputFormat=application/json",
           value: "geoboundzone",
+          dataType: 1,
         },
         {
           label: "断层构造分布",
@@ -274,6 +277,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:faultzone&maxFeatures=10000&outputFormat=application/json",
           value: "faultzone",
+          dataType: 1,
         },
         {
           label: "产状点",
@@ -284,6 +288,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:occurrence&maxFeatures=10000&outputFormat=application/json",
           value: "occurrence",
+          dataType: 1,
         },
         {
           label: "围岩蚀变点",
@@ -294,6 +299,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:alterationt&maxFeatures=10000&outputFormat=application/json",
           value: "alterationt",
+          dataType: 1,
         },
         {
           label: "地形地貌",
@@ -305,6 +311,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:landform&maxFeatures=10000&outputFormat=application/json",
           value: "landform",
+          dataType: 2,
         },
         {
           label: "矿产开发及采空区",
@@ -316,6 +323,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:minegoaf&maxFeatures=10000&outputFormat=application/json",
           value: "minegoaf",
+          dataType: 2,
         },
         {
           label: "特殊岩体",
@@ -327,6 +335,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:specialrocksoil&maxFeatures=10000&outputFormat=application/json",
           value: "specialrocksoil",
+          dataType: 2,
         },
         {
           label: "不良地质",
@@ -338,6 +347,7 @@ export default {
           wfsUrl:
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:unfavorablegeology&maxFeatures=10000&outputFormat=application/json",
           value: "unfavorablegeology",
+          dataType: 2,
         },
       ],
       fieldOptions: [
@@ -629,15 +639,39 @@ export default {
   },
   created() {
     eventVue.$on("sendTree2DViewInfoByEventBus", (res) => {
-      console.log(res);
-      console.log(this.radio);
+      let tempDataType = 1;
+      for (let i = 0; i < this.tempLayerOptions.length; i++) {
+        if (this.tempLayerOptions[i].value === res.nodeData.layers) {
+          tempDataType = this.tempLayerOptions[i].dataType;
+        }
+      }
       if (this.radio === "2") {
-        this.fieldOptions = [];
-        this.fieldValue = "";
-        this.layerSelectValue = "";
-        this.fieldSelectValue = "";
-        this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
-        this.$emit("sendResetInfoEvent", 2);
+        if (
+          res.nodeData.children &&
+          res.nodeData.serviceType === "wms" &&
+          res.isChecked === false &&
+          res.nodeData.dataType === tempDataType
+        ) {
+          this.fieldOptions = [];
+          this.fieldValue = "";
+          this.layerSelectValue = "";
+          this.fieldSelectValue = "";
+          this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
+          this.$emit("sendResetInfoEvent", 2);
+        } else if (
+          !res.nodeData.children &&
+          res.nodeData.serviceType === "wms" &&
+          res.isChecked === false &&
+          res.nodeData.layers === this.layerSelectValue &&
+          res.nodeData.dataType === tempDataType
+        ) {
+          this.fieldOptions = [];
+          this.fieldValue = "";
+          this.layerSelectValue = "";
+          this.fieldSelectValue = "";
+          this.$emit("sendResetInfoEvent", 1); // 隐藏对话框
+          this.$emit("sendResetInfoEvent", 2);
+        }
       }
 
       let tempList = res.nodeData;

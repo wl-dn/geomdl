@@ -46,22 +46,29 @@
               <el-table-column prop="stratumeras" label="地质年代">
               </el-table-column>
               <el-table-column prop="lithology" label="岩性"> </el-table-column>
+              <el-table-column prop="clayeystate" label="岩土体状态">
+              </el-table-column>
+              <el-table-column prop="soilrockclassify" label="土石类别">
+              </el-table-column>
+            </el-table>
+          </div>
+          <div class="content_box_3" v-else-if="item.tableType === 3">
+            <el-table
+              :data="item.tableData"
+              border
+              style="width: 100%"
+              height="350px"
+            >
+              <el-table-column prop="stratCode" label="地层编码">
+              </el-table-column>
+              <el-table-column prop="topElevation" label="顶板高程">
+              </el-table-column>
+              <el-table-column prop="bottomElevation" label="底板高程">
+              </el-table-column>
             </el-table>
           </div>
         </el-tab-pane>
       </el-tabs>
-      <!-- <div class="head_box">
-        {{tableTheme}}
-        <span class="close_span" @click="closeOnClick">×</span>
-      </div>
-      <div class="content_box">
-        <table>
-          <tr v-for="(item, row) in tableData" :key="row">
-            <td>{{ item.label }}</td>
-            <td>{{ item.value }}</td>
-          </tr>
-        </table>
-      </div> -->
     </div>
   </transition>
 </template>
@@ -155,11 +162,10 @@ export default {
   background: #f0f9eb;
 }
 .el-tabs__nav-scroll {
-  background-color: rgb(144, 147, 153)!important;
-  
+  background-color: rgb(144, 147, 153) !important;
 }
 .el-tabs__item.is-active {
-  color: white!important;
+  color: white !important;
 }
 </style>
 <style scoped>
@@ -171,7 +177,7 @@ export default {
   background-color: rgb(244, 244, 245);
   position: fixed;
   z-index: 1;
-  bottom: 0px;
+  bottom: 40px;
   right: 0px;
 }
 .commonTableBox .head_box {
@@ -193,6 +199,11 @@ export default {
   overflow-y: auto;
 }
 .commonTableBox .content_box_2 {
+  width: 100%;
+  height: 350px;
+  overflow-y: auto;
+}
+.commonTableBox .content_box_3 {
   width: 100%;
   height: 350px;
   overflow-y: auto;

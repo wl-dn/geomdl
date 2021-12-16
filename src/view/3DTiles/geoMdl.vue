@@ -77,17 +77,6 @@
       :editableTabsValue="editableTabsValue"
     ></holeLayerInfo>
 
-    <!-- 虚拟钻孔 -->
-    <virtualBox
-      :virtualLayerInfo="virtualLayerInfo"
-      :fieldsList="fieldsList"
-      :isVisible="isvirtualLayerDialogVisible"
-      :tableTheme="virtualTableTheme"
-      @sendCloseVirtualDialog="isvirtualLayerDialogVisible = false"
-      @sendCommonTabNameInfo="receptCommonTabNameInfo"
-      :editableTabsValue="editableTabsValue"
-    ></virtualBox>
-
     <!-- 通用盒子显示信息 -->
     <commonTableBox
       :dataTabs="tableCommonData"
@@ -122,7 +111,6 @@ import mdlView from "../../components/cesiumComponents/mdlView.vue";
 import mdlFenxi from "../../components/cesiumComponents/mdlFenxi.vue";
 import cesiumCommonTool from "../../components/cesiumComponents/cesiumCommonTool.vue";
 import holeLayerInfo from "../../components/toolComponents/holeLayerInfo.vue";
-import virtualBox from "../../components/toolComponents/virtualHoleInfo.vue";
 import searchBar from "../../components/toolComponents/searchCompent/searchComopent.vue";
 import commonTableBox from "../../components/toolComponents/commonTableInfo.vue";
 import bottomTool from "../../components/cesiumComponents/bottomTool.vue";
@@ -133,13 +121,15 @@ import ImageryLoader from "../../utils/cesiumUtils/ImageryLoader";
 import { DrawPolygon } from "../../utils/drawUtils";
 import TerrainClipPlan from "../../utils/TerrainClipPlan";
 //引入虚拟钻孔grpc服务 sisi
-import * as VirtualHoleService from "../../../public/proto/dummy_hole_service_grpc_web_pb";
+import * as VirtualHoleService from "../../assets/js/proto/dummy_hole_service_grpc_web_pb";
 
 import { Notification } from "element-ui";
 import eventVue from "../../assets/js/eventVue";
 
 import PathGraphics from "cesium/Source/DataSources/PathGraphics";
 import Viewer from "cesium/Source/Widgets/Viewer/Viewer";
+
+import proj4 from "proj4";
 
 let tileSetList = [];
 let viewer = null;
@@ -178,12 +168,12 @@ export default {
           icon: "icon-diqiu",
           label: "三维服务",
         },
-        // {
-        //   id: 3,
-        //   checked: false,
-        //   icon: "icon-fenxi",
-        //   label: "专业分析",
-        // },
+        {
+          id: 3,
+          checked: false,
+          icon: "icon-fenxi",
+          label: "专业分析",
+        },
         {
           id: 4,
           checked: false,
@@ -222,12 +212,6 @@ export default {
       activeDoubleEvent: false, // 是否激活双击事件
       flagTimer: null, // 区分单击和双击
 
-      //虚拟钻孔
-      isvirtualLayerDialogVisible: false,
-      virtualLayerInfo: [],
-      fieldsList: [],
-      virtualTableTheme: null, //设置表格title
-
       // 通用盒子信息
       isCommonVisible: false,
       tableCommonData: [],
@@ -239,6 +223,11 @@ export default {
       removeListener: undefined,
 
       editableTabsValue: "1",
+
+      // 列表proj的坐标事件
+      EPSG4326: "+proj=longlat +datum=WGS84 +no_defs",
+      EPSG4547:
+        "+proj=tmerc +lat_0=0 +lon_0=114 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +units=m +no_defs",
     };
   },
   components: {
@@ -249,7 +238,6 @@ export default {
     cesiumCommonTool,
     holeLayerInfo,
     searchBar,
-    virtualBox,
     commonTableBox,
     bottomTool,
   },
@@ -389,6 +377,20 @@ export default {
       const loadFlagObj = this.judgeIs3DTiles(name);
       if (loadFlagObj.flag) {
         loadFlagObj.tile.show = isChecked;
+        // 先判断是否含有模型
+        if (isChecked) {
+          this.mdlOptions.push({
+            value: name,
+            label: label,
+          });
+        } else {
+          for (let i = 0; i < this.mdlOptions.length; i++) {
+            if (this.mdlOptions[i].value === name) {
+              this.mdlOptions.splice(i, 1);
+            }
+          }
+        }
+
         return;
       }
       // 加载3Dtiles文件
@@ -677,10 +679,13 @@ export default {
     // 清除绘制
     clearDraw() {
       if (viewer.entities) {
-        if (viewer.scene.globe.clippingPlanes) {
-          viewer.scene.globe.clippingPlanes.removeAll();
+        let entities = viewer.entities.values;
+        for (let i = 0; i < entities.length; i++) {
+          if (entities[i].name === "tempLine") {
+            viewer.entities.remove(entities[i]);
+            break;
+          }
         }
-        viewer.entities.removeAll();
       }
       this.activeDoubleEvent = false;
     },
@@ -803,7 +808,6 @@ export default {
                   },
                 })
                 .then((res) => {
-                  console.log("钻孔点选查询");
                   let tempData = res.data.data[0];
                   let tempArr = [];
                   let obj = null;
@@ -824,18 +828,6 @@ export default {
                   });
                   this.isCommonVisible = true;
                   this.isLayerDialogVisible = false;
-
-                  // this.layerInfo = [];
-                  // let count = this.layerInfo.length;
-                  // this.drillName = pick.id;
-                  // this.editableTabsValue = "1";
-                  // this.layerInfo.push({
-                  //   title: pick.id,
-                  //   name: ++count + "",
-                  //   tableData: res.data.data,
-                  // });
-                  // this.isLayerDialogVisible = true;
-                  // this.isCommonVisible = false;
                 });
             }
 
@@ -926,65 +918,62 @@ export default {
           clearTimeout(this.flagTimer);
           if (this.activeDoubleEvent) {
             let pick = viewer.scene.pick(movement.position);
-            if (Cesium.defined(pick)) {
+            if (
+              Cesium.defined(pick) &&
+              pick instanceof Cesium.Cesium3DTileFeature
+            ) {
+              this.editableTabsValue = "1";
+              this.tableCommonData = [];
               let cartesian = viewer.scene.pickPosition(movement.position);
               let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
               let degreeCenter = this.getMdlDegreeCenter(cartographic);
               // degreeCenter 就是获取到的高度，经度，维度
               // console.log(degreeCenter);
               //查询虚拟钻孔信息  sisi
-              this.virtualLayerInfo = [];
-              let count = this.virtualLayerInfo.length;
-              this.editableTabsValue = "1";
-              let tableData = [
-                {
-                  topElevation: 1,
-                  bottomElevation: 1,
-                  stratCode: 1,
-                },
-                {
-                  topElevation: 1,
-                  bottomElevation: 1,
-                  stratCode: 1,
-                },
-                {
-                  topElevation: 1,
-                  bottomElevation: 1,
-                  stratCode: 1,
-                },
-              ];
-              this.virtualLayerInfo.push({
-                title: "虚拟钻孔点位信息",
-                name: ++count + "",
-                tableData: tableData,
-              });
-              this.isvirtualLayerDialogVisible = true;
-              return;
-              this.virtualLayerInfo = [];
+              let transFormCoordinate = proj4(this.EPSG4326, this.EPSG4547, [
+                degreeCenter[1],
+                degreeCenter[2],
+              ]);
               let client = new VirtualHoleService.DummyHoleServicePromiseClient(
-                "http://10.101.140.3:8011"
+                "http://192.10.3.237:8011"
               );
               let virtualRequest =
                 new VirtualHoleService.DummyHoleServiceRequest();
-              virtualRequest.setMdlDbId(81);
-              virtualRequest.setMdlId(1);
+              virtualRequest.setMdlDbId(3);
+              virtualRequest.setMdlId(16);
               let dots = new VirtualHoleService.A3dDot();
-              dots.setX(449527.06);
-              dots.setY(2714965.48);
+
+              dots.setX(transFormCoordinate[0]);
+              dots.setY(transFormCoordinate[1]);
               dots.setZ(0);
               let dotList = [];
               dotList.push(dots);
               virtualRequest.setRgnDotsList(dotList);
               client.createDummyHoles(virtualRequest, {}).then((res) => {
                 let resObject = res.toObject();
-                let holeList = resObject.holeListList[0];
-                let infoFileds = Object.keys(holeList.layerInfoListList[0]);
-                this.fieldsList = [];
-                this.virtualLayerInfo = holeList.layerInfoListList;
-                this.virtualTableTheme = "虚拟钻孔点位信息";
-                this.isvirtualLayerDialogVisible = true;
+                let holeList = resObject.holeListList[0].layerInfoListList;
+                let count = this.tableCommonData.length;
+                this.tableCommonData.push({
+                  title: "虚拟钻孔分层信息",
+                  name: ++count + "",
+                  tableType: 3,
+                  tableData: holeList,
+                });
+                this.isCommonVisible = true;
+                this.isLayerDialogVisible = false;
               });
-
+              //绘制线
+              let startPoint1 = Cesium.Cartesian3.fromDegrees(
+                degreeCenter[1],
+                degreeCenter[2],
+                degreeCenter[0] + 10
+              );
+              let endPoint1 = Cesium.Cartesian3.fromDegrees(
+                degreeCenter[1],
+                degreeCenter[2],
+                -10
+              );
+              this.drawLine(startPoint1, endPoint1, Cesium.Color.RED); //绘制交汇线
               return;
               let startPoint = Cesium.Cartesian3.fromDegrees(
                 degreeCenter[1],
@@ -999,6 +988,7 @@ export default {
                 // -99999
               );
               this.drawLine(startPoint, endPoint, Cesium.Color.RED); //绘制交汇线
+
               let direction = Cesium.Cartesian3.normalize(
                 Cesium.Cartesian3.subtract(
                   endPoint,
@@ -1041,12 +1031,13 @@ export default {
                 label: "地层厚度",
                 value: "地层厚度",
               });
-              this.fieldsList = tempFieldList;
-              this.virtualLayerInfo = resultLayerData.reverse();
-              this.isvirtualLayerDialogVisible = true;
             }
+          } else {
+            this.$message({
+              type: "warning",
+              message: "请先加载模型或选择虚拟钻孔",
+            });
           }
-          console.log("双击左键");
         }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
       }
     },
@@ -1079,9 +1070,7 @@ export default {
       // let pickedFeature = viewer.scene.pick(movement.position);
       if (Cesium.defined(pickedFeature)) {
         if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
-          if (
-            pickedFeature.tileset._url === "3DTiles/drill_3dtiles/tileset.json"
-          ) {
+          if (pickedFeature.tileset.name === "holemdl") {
             let cartesian = viewer.scene.pickPosition(movement.position);
             let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
             const holecode = pickedFeature.getProperty("钻孔编码");
@@ -1107,8 +1096,6 @@ export default {
 
                 this.drillName = holecode;
                 this.editableTabsValue = "1";
-                // this.layerInfo = res.data.data;
-                console.log(count);
                 this.layerInfo.push({
                   title: holecode,
                   name: ++count + "",
@@ -1117,37 +1104,7 @@ export default {
                 this.isLayerDialogVisible = true;
                 this.isCommonVisible = false;
               });
-            // this.$http
-            //   .get("/getHoleLayerInfoByHeight", {
-            //     params: {
-            //       holeCode: holecode,
-            //       height: mhDistance,
-            //     },
-            //   })
-            //   .then((res) => {
-            //     this.tableCommonData = [];
-            //     let properList = res.data.data[0];
-            //     console.log(res.data);
-            //     console.log(properList);
-            //     this.tableTitleTheme = holecode;
-            //     for (let k in properList) {
-            //       let obj = {
-            //         label: k,
-            //         value: properList[k],
-            //       };
-            //       this.tableCommonData.push(obj);
-            //     }
-            //     this.isCommonVisible = true;
-            //     // this.drillName = holecode;
-            //     // this.layerInfo = res.data.data;
-            //     // this.isLayerDialogVisible = true;
-            //   })
-            //   .catch((err) => {
-            //     console.log(err);
-            //   });
-          } else if (
-            pickedFeature.tileset._url === "3DTiles/model_3dtiles/tileset.json"
-          ) {
+          } else if (pickedFeature.tileset.name === "3dmdl") {
             let titles = "地层编码";
             let resStr = pickedFeature.getProperty("地层编码");
             let obj = [
@@ -1169,7 +1126,15 @@ export default {
               this.isCommonVisible = true;
               this.isLayerDialogVisible = false;
             }
-          } else {
+          } else if (pickedFeature.tileset.name === "secmdl") {
+            let tilteName = "剖面地层信息";
+            if (
+              pickedFeature.getProperty("CNAM") === "3_3" ||
+              pickedFeature.getProperty("CNAM") === "2_2" ||
+              pickedFeature.getProperty("CNAM") === "1_1"
+            ) {
+              tilteName = "剖面地质界线";
+            }
             this.tableCommonData = [];
             let tmp = [];
             let propertyList = pickedFeature.getPropertyNames();
@@ -1186,7 +1151,7 @@ export default {
               this.editableTabsValue = "1";
               let count = this.tableCommonData.length;
               this.tableCommonData.push({
-                title: "地层信息",
+                title: tilteName,
                 name: ++count + "",
                 tableData: tmp,
                 tableType: 1,
@@ -1221,6 +1186,13 @@ export default {
     },
     // 绘制线
     drawLine(leftPoint, secPoint, color) {
+      let entities = viewer.entities.values;
+      for (let i = 0; i < entities.length; i++) {
+        if (entities[i].name === "tempLine") {
+          viewer.entities.remove(entities[i]);
+          break;
+        }
+      }
       viewer.entities.add({
         polyline: {
           positions: [leftPoint, secPoint],
@@ -1229,6 +1201,7 @@ export default {
           material: color,
           depthFailMaterial: color,
         },
+        name: "tempLine",
       });
     },
     // 获取能够查询imageryProvider
@@ -1381,7 +1354,6 @@ export default {
           data.isChecked
         );
       }
-      console.log(this.activeImageryNameSet);
     },
     // 接收三维服务
     recept3dViewInfo(data) {
@@ -1481,7 +1453,23 @@ export default {
       } else if (data.label === "清除绘制") {
         this.clearDraw();
       } else if (data.label === "虚拟钻孔") {
-        this.activeDoubleEvent = true;
+        let flag = 0;
+        for (let i = 0; i < tileSetList.length; i++) {
+          if (
+            tileSetList[i].name === "3dmdl" &&
+            tileSetList[i].tileSet.show === true
+          ) {
+            flag = 1;
+          }
+        }
+        if (flag === 0) {
+          this.$message({
+            type: "warning",
+            message: "请加载三维地质模型",
+          });
+        } else {
+          this.activeDoubleEvent = true;
+        }
       }
     },
     // 接收地球透明
@@ -1858,7 +1846,7 @@ export default {
 
 .mdlTool_box {
   position: fixed;
-  top: 105px;
+  top: 160px;
   right: 100px;
 }
 </style>

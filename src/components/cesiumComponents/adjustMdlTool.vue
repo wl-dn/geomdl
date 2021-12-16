@@ -105,7 +105,7 @@ export default {
 .adjustMdlBox {
   position: fixed;
   top: 210px;
-  right: 20px;
+  right: 100px;
   z-index: 1;
   background-color: rgba(1, 8, 6, 0.5);
   padding: 1rem;

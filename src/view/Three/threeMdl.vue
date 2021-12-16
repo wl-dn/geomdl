@@ -788,6 +788,7 @@ export default {
             stencilGroup = new THREE.Group();
             scene.add(poGroup);
             scene.add(stencilGroup);
+            this.stencilGroup.scale.set(1, 1, this.scaleValue / 10.0);
             mdlGroup.traverse((child) => {
               if (child instanceof THREE.Mesh) {
                 child.material.clippingPlanes = "";

@@ -38,6 +38,10 @@
             <el-table-column prop="stratumeras" label="地质年代">
             </el-table-column>
             <el-table-column prop="lithology" label="岩性"> </el-table-column>
+            <el-table-column prop="clayeystate" label="岩土体状态">
+            </el-table-column>
+            <el-table-column prop="soilrockclassify" label="土石类别">
+            </el-table-column>
           </el-table>
         </el-tab-pane>
       </el-tabs>
@@ -82,7 +86,7 @@ export default {
   },
   data() {
     return {
-      TabsValue:"1"
+      TabsValue: "1",
     };
   },
   watch: {
@@ -106,8 +110,8 @@ export default {
       return "";
     },
     tabClick(tab) {
-       this.$emit("sendCommonTabNameInfo", tab.name);
-    }
+      this.$emit("sendCommonTabNameInfo", tab.name);
+    },
   },
 };
 </script>
@@ -128,7 +132,7 @@ export default {
   background-color: rgb(244, 244, 245);
   position: fixed;
   z-index: 1;
-  bottom: 0px;
+  bottom: 40px;
   right: 0px;
 }
 .holeLayer_head_box {

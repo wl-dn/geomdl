@@ -17,6 +17,7 @@
     "google-protobuf": "3.15.7",
     "grpc-web": "1.2.1",
     "postcss-px2rem": "^0.3.0",
+    "proj4": "^2.7.5",
     "three": "^0.131.3",
     "v-region": "^2.2.2",
     "vue": "^2.6.11",
