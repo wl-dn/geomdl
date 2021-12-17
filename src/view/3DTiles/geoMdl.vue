@@ -120,6 +120,7 @@ import TerrainLoader from "../../utils/cesiumUtils/TerrainLoader.js";
 import ImageryLoader from "../../utils/cesiumUtils/ImageryLoader";
 import { DrawPolygon } from "../../utils/drawUtils";
 import TerrainClipPlan from "../../utils/TerrainClipPlan";
+import attributeCompare from "../../assets/js/attribute";
 //引入虚拟钻孔grpc服务 sisi
 import * as VirtualHoleService from "../../assets/js/proto/dummy_hole_service_grpc_web_pb";
 
@@ -812,11 +813,14 @@ export default {
                   let tempArr = [];
                   let obj = null;
                   for (let k in tempData) {
-                    obj = {
-                      label: k,
-                      value: tempData[k],
-                    };
-                    tempArr.push(obj);
+                    let chineseField = attributeCompare.pointInfo.get(k);
+                    if (chineseField) {
+                      obj = {
+                        label: chineseField,
+                        value: tempData[k],
+                      };
+                      tempArr.push(obj);
+                    }
                   }
                   let count = this.tableCommonData.length;
 
@@ -848,7 +852,6 @@ export default {
                 // 只有显示的并且是geoserver和arcgisserver的可以用
                 // 确定哪个图层可查
                 let tempImageryProvider = this.getQueryImageryProvider();
-                console.log(tempImageryProvider);
                 if (!tempImageryProvider.length) return;
                 for (const tmpImgProvider of tempImageryProvider) {
                   if (tmpImgProvider.ready) {
@@ -865,28 +868,45 @@ export default {
                       cartographic.latitude
                     );
                     Cesium.when(promise, (layerInfo) => {
-                      console.log("服务点选查询");
-                      let tmpArr = [];
-                      const properList = layerInfo[0].properties;
-                      let obj = null;
-                      this.tableTitleTheme = tmpImgProvider.label;
-                      for (let k in properList) {
-                        obj = {
-                          label: k,
-                          value: properList[k],
-                        };
-                        tmpArr.push(obj);
+                      for (let i = 0; i < layerInfo.length; i++) {
+                        let tmpArr = [];
+                        const properList = layerInfo[i].properties;
+                        let obj = null;
+                        const layerName = tmpImgProvider.name;
+                        let layerLabel = tmpImgProvider.label;
+                        for (let k in properList) {
+                          if (
+                            layerName === "mapserver_geomap" ||
+                            layerName === "1,2,3,4,5,6"
+                          ) {
+                            obj = {
+                              label: k,
+                              value: properList[k],
+                            };
+                            tmpArr.push(obj);
+                          } else {
+                            let chineseField =
+                              attributeCompare[layerName].get(k);
+                            if (chineseField) {
+                              obj = {
+                                label: chineseField,
+                                value: properList[k],
+                              };
+                              tmpArr.push(obj);
+                            }
+                          }
+                        }
+                        if (tmpArr.length > 0) {
+                          let count = this.tableCommonData.length;
+                          this.tableCommonData.push({
+                            title: layerLabel,
+                            name: ++count + "",
+                            tableType: 1,
+                            tableData: tmpArr,
+                          });
+                        }
                       }
-                      if (tmpArr.length) {
-                        let count = this.tableCommonData.length;
-                        // this.editableTabsValue = "1";
-
-                        this.tableCommonData.push({
-                          title: tmpImgProvider.label,
-                          name: ++count + "",
-                          tableType: 1,
-                          tableData: tmpArr,
-                        });
+                      if (this.tableCommonData.length > 0) {
                         this.isCommonVisible = true;
                         this.isLayerDialogVisible = false;
                       }
@@ -1128,22 +1148,27 @@ export default {
             }
           } else if (pickedFeature.tileset.name === "secmdl") {
             let tilteName = "剖面地层信息";
-            if (
-              pickedFeature.getProperty("CNAM") === "3_3" ||
-              pickedFeature.getProperty("CNAM") === "2_2" ||
-              pickedFeature.getProperty("CNAM") === "1_1"
-            ) {
+            let flagInfo = "secMdl";
+            if (pickedFeature.getProperty("boundarytype") === "地层岩性界线") {
               tilteName = "剖面地质界线";
+              flagInfo = "secLine";
             }
             this.tableCommonData = [];
             let tmp = [];
             let propertyList = pickedFeature.getPropertyNames();
+            console.log(propertyList);
+            console.log(pickedFeature.getProperty("boundarytype"));
             for (let i = 0; i < propertyList.length; i++) {
-              let obj = {
-                label: propertyList[i],
-                value: pickedFeature.getProperty(propertyList[i]),
-              };
-              tmp.push(obj);
+              let chineseFiled = attributeCompare[flagInfo].get(
+                propertyList[i]
+              );
+              if (chineseFiled) {
+                let obj = {
+                  label: chineseFiled,
+                  value: pickedFeature.getProperty(propertyList[i]),
+                };
+                tmp.push(obj);
+              }
             }
             if (tmp.length) {
               this.isCommonVisible = true;
@@ -1213,6 +1238,8 @@ export default {
         if (
           this.activeImageryNameSet.has(name) &&
           tempImagerys[i].show === true &&
+          name !== "gdtImgLayer" &&
+          name !== "tdtCiaLayer" &&
           name.indexOf("temp") === -1
         )
           imgArr.push(tempImagerys[i].imageryProvider);

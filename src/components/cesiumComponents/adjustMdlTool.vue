@@ -16,7 +16,7 @@
       ></el-checkbox>
     </div>
     <div>
-      <span>比例(Z)</span>
+      <span>比例</span>
       <el-input-number
         v-model="tileModelTool.scale"
         label="描述文字"

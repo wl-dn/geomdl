@@ -44,10 +44,10 @@ Vue.prototype.$http = axios;
 // Vue.prototype.tiandituTk = "59e1f33a85b33bcf1b27dea77be6b96d";
 // Vue.prototype.tiandituTk = "5f8b46b7f8a09d5964eb1b9fea223c93";
 // Vue.prototype.tiandituTk = "aed99c44fe1f061f7d646a52aa42ae6b";
-Vue.prototype.tiandituTk = "817528d5327313ac71d5e26c3c886b2b";
+// Vue.prototype.tiandituTk = "817528d5327313ac71d5e26c3c886b2b";
 
 // jj的key
-// Vue.prototype.tiandituTk = "46f03a1a4f10a133fd2c3dca0de3aabe";
+Vue.prototype.tiandituTk = "46f03a1a4f10a133fd2c3dca0de3aabe";
 
 
 

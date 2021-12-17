@@ -82,8 +82,6 @@ export default class TransformUtils {
      * @return {*}
      */
     scaleMdl(scaleX, scaleY, scaleZ) {
-        scaleX = 1;
-        scaleZ = 1;
         let scaleMatrix = new Cesium.Matrix4();
         // 构造本地矩阵
         const cartesianScale = new Cesium.Cartesian3(scaleX, scaleY, scaleZ);

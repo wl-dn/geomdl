@@ -19,8 +19,8 @@ const postcss = px2rem({
 
 module.exports = {
     // publicPath: process.env.NODE_ENV === 'production' ? './' : '/',
-    publicPath: '/crccgeo/',
     // publicPath: '/crccgeo/',
+    publicPath: '/crccgeo/',
     assetsDir: 'static', // 将所有静态文件集成在static中
     // outputDir: "vue-cesium",
     outputDir: "crccgeo",
