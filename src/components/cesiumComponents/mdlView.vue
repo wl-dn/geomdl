@@ -56,7 +56,7 @@ export default {
           label: "工程地质钻孔数据服务",
           name: "holemdl",
           url: "3DTiles/drill_3dtiles/tileset.json",
-          // url: "3DTiles/testHoleMdl/tileset.json",
+          // url: "3DTiles/m7/tileset.json",
           serviceType: "3DTiles",
         },
         {

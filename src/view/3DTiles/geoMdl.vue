@@ -1795,11 +1795,11 @@ export default {
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面
     // 加载三维地形
-    new TerrainLoader().loadLocalTerrain(
-      "http://192.10.3.237:81/tsyTerrain/",
-      viewer,
-      true
-    );
+    // new TerrainLoader().loadLocalTerrain(
+    //   "http://192.10.3.237:81/tsyTerrain/",
+    //   viewer,
+    //   true
+    // );
     this.registerOnclickEvent();
     // let a = CesiumUtils.drawUtils(viewer);
     // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);

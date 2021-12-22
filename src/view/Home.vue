@@ -76,10 +76,10 @@ export default {
               index: "adjust3DTiles",
               label: "三维地质模型",
             },
-            // {
-            //   index:"drawEntity",
-            //   label:"绘制点线面"
-            // },
+            {
+              index:"drawEntity",
+              label:"绘制点线面"
+            },
             // {
             //   index:"digTerrian",
             //   label:"地形挖掘",
