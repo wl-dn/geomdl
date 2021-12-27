@@ -24,9 +24,28 @@ export default class ImageryLoader {
         if (result.flag) {
             result.obj.show = isChecked;
             // isChecked ? ImageryLoader.setWmsView(viewer, url) : 1;
-            isChecked ? viewer.camera.setView({
-                destination: rectangle
-            }) : 1;
+            if (layerName.indexOf('seic') >= 0 || layerName === "geohazard") {
+                isChecked ? ViewCesiumUtils.resetView(
+                    viewer,
+                    113.805972,
+                    27.664014,
+                    8000000.0
+                ) : 1;
+            } else if (layerName.indexOf("hydro") >= 0) {
+                isChecked ? ViewCesiumUtils.resetView(
+                    viewer,
+                    113.805972,
+                    23.664014,
+                    220000.0
+                ) : 1;
+            }
+
+            else {
+                isChecked ? viewer.camera.setView({
+                    destination: rectangle
+                }) : 1;
+            }
+
 
             return
         }
@@ -46,13 +65,29 @@ export default class ImageryLoader {
         wmsImageLayer.name = layerName;
         wmsImageLayer.label = label;
         viewer.imageryLayers.addImageryProvider(wmsImageLayer)
-        // ImageryLoader.setWmsView(viewer, url)
-        viewer.camera.setView({
-            destination: rectangle
-        })
+        if (layerName.indexOf('seic') >= 0 || layerName === "geohazard") {
+            ViewCesiumUtils.resetView(
+                viewer,
+                113.805972,
+                27.664014,
+                8000000.0
+            );
+        } else if (layerName.indexOf("hydro") >= 0) {
+            ViewCesiumUtils.resetView(
+                viewer,
+                113.805972,
+                23.664014,
+                220000.0
+            );
+        }
+        else {
+            viewer.camera.setView({
+                destination: rectangle
+            })
+        }
     }
     // 加载筛选后的wms服务
-    static loadSelectWmsLayer(viewer, url, layer, label, cqlStr, lon, lat, isChecked) {
+    static loadSelectWmsLayer(viewer, url, layer, label, cqlStr, lon, lat, geometryType, isChecked) {
         console.log(lon, lat);
         let imageryLayers = viewer.imageryLayers
         let rectangle = Cesium.Rectangle.fromDegrees(
@@ -77,13 +112,17 @@ export default class ImageryLoader {
             }
             return;
         }
+        let tempStyle = "hlight-ploygon-style";
+        if (geometryType === "Point") {
+            tempStyle = "hlight-point-style"
+        }
         let parameters = {
             transparent: true, //是否透明
             format: "image/png",
             VERSION: "1.1.1",
             srs: "EPSG:4326",
             service: "WMS",
-            styles: "hlight-style", // 添加自定义样式、统一高亮颜色
+            styles: tempStyle, // 添加自定义样式、统一高亮颜色
             // styles: "point", // 添加自定义样式、统一高亮颜色  这里有个bug线面图层无法适应到面图层
             exceptions: "application/vnd.ogc.se_inimage",
         };
@@ -407,5 +446,22 @@ export default class ImageryLoader {
                     destination: rectangle,
                 });
             });
+    }
+    static flytochina(viewer) {
+        viewer.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+                110.435314,
+                40.960521,
+                8000000.0
+            ),
+            orientation: {
+                heading: Cesium.Math.toRadians(20), //代表镜头左右方向,正值为右,负值为左,360度和0度是一样的
+                pitch: Cesium.Math.toRadians(-95), //代表镜头上下方向,正值为上,负值为下.
+                roll: Cesium.Math.toRadians(-20), //代表镜头左右倾斜.正值,向右倾斜,负值向左倾斜
+            },
+            complete: function callback() {
+                // 定位完成之后的回调函数
+            },
+        });
     }
 }

@@ -100,8 +100,8 @@ export default {
         // 视点海拔高度
         const ViewpointsHeight =
           viewer.scene.camera.positionCartographic.height;
-        this.commonCesiumInfos.lng = lng ? lng.toFixed(2) + "" : "";
-        this.commonCesiumInfos.lat = lat ? lat.toFixed(2) + "" : "";
+        this.commonCesiumInfos.lng = lng ? lng.toFixed(7) + "" : "";
+        this.commonCesiumInfos.lat = lat ? lat.toFixed(7) + "" : "";
         this.commonCesiumInfos.height = height ? height.toFixed(2) + "" : "";
         this.commonCesiumInfos.ViewpointsHeight = ViewpointsHeight
           ? ViewpointsHeight.toFixed(2) + ""

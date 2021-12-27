@@ -53,17 +53,39 @@ export default {
           active: false,
         },
         {
+          index: 7,
+          iconClass: "icon-celiang",
+          active: false,
+          label: "测量距离",
+        },
+        // {
+        //   id: 8,
+        //   iconClass: "icon-shitucemianji",
+        //   active: false,
+        //   label: "测量面积",
+        // },
+        {
+          index: 9,
+          iconClass: "icon-qingchuhuizhi",
+          active: false,
+          label: "清除绘制",
+        },
+        {
+          index: 10,
+          iconClass: "icon-wanggekai",
+          active: false,
+          label: "经纬度网格",
+        },
+        {
           label: "复位",
           index: 3,
           iconClass: "icon-solid-home",
-
           active: false,
         },
         {
           label: "放大",
           index: 4,
           iconClass: "icon-jia",
-
           active: false,
         },
 
@@ -95,7 +117,12 @@ export default {
   computed: {},
   methods: {
     onClickCesiumTool(item) {
-      if (item.index == 1 || item.index == 2 || item.index == 6) {
+      if (
+        item.index == 1 ||
+        item.index == 2 ||
+        item.index == 6 ||
+        item.index === 10
+      ) {
         item.active = !item.active;
       }
       this.$emit("commonToolHandleOnClick", item);
