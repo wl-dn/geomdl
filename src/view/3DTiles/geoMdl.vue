@@ -4,7 +4,7 @@
  * @version: 
  * @Date: 2021-08-19 20:18:14
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-12-07 15:26:09
+ * @LastEditTime: 2021-12-27 09:38:27
 -->
 <template>
   <div id="cesiumContainer">
@@ -326,9 +326,6 @@ export default {
           },
         },
       });
-
-
-     
 
       if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {
         //判断是否支持图像渲染像素化处理
@@ -893,7 +890,7 @@ export default {
                           if (
                             layerName === "mapserver_geomap" ||
                             layerName === "1,2,3,4,5,6" ||
-                            layerName === "geomap_35_lyr_2" ||
+                            layerName.indexOf("seic") >= 0 ||
                             layerName === "geohazard" ||
                             layerName.indexOf("hydro") >= 0
                           ) {
@@ -1777,11 +1774,11 @@ export default {
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面
     // 加载三维地形
-    new TerrainLoader().loadLocalTerrain(
-      "http://192.10.3.237:81/tsyTerrain/",
-      viewer,
-      true
-    );
+    // new TerrainLoader().loadLocalTerrain(
+    //   "http://192.10.3.237:81/tsyTerrain/",
+    //   viewer,
+    //   true
+    // );
     this.registerOnclickEvent();
     eventVue.$emit("sendCesiumViewer", viewer);
     // this.getGeoServerWmsBoundingBox("http://192.10.3.237/geoserver/crcc-dev/wms");

@@ -1,7 +1,7 @@
 <!--
  * @Author: your name
  * @Date: 2021-12-01 16:56:38
- * @LastEditTime: 2021-12-01 17:21:03
+ * @LastEditTime: 2021-12-27 09:41:40
  * @LastEditors: Please set LastEditors
  * @Description: 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  * @FilePath: \geoinfocentere:\STUDY\开发\web3d\3dMdl\src\components\toolComponents\searchCompent\commenSearch.vue
@@ -570,15 +570,29 @@ export default {
           geometryType: "Point",
         },
         {
-          label: "全国地震数据",
-          name: "geomap_35_lyr_2",
+          label: "地震加速度反应谱",
+          name: "seic_a_fin",
           wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
           attrUrl:
-            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geomap_35_lyr_2&outputFormat=application/json",
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:seic_a_fin&outputFormat=application/json",
           wfsUrl:
-            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geomap_35_lyr_2&maxFeatures=10000&outputFormat=application/json",
-          layer: "geomap_35_lyr_2",
-          value: "geomap_35_lyr_2",
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:seic_a_fin&maxFeatures=10000&outputFormat=application/json",
+          layer: "seic_a_fin",
+          value: "seic_a_fin",
+          serviceType: "wms",
+          dataType: 8,
+          geometryType: "ploygon",
+        },
+          {
+          label: "地震加速度周期",
+          name: "seic_c_fin",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:seic_c_fin&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:seic_c_fin&maxFeatures=10000&outputFormat=application/json",
+          layer: "seic_c_fin",
+          value: "seic_c_fin",
           serviceType: "wms",
           dataType: 8,
           geometryType: "ploygon",
