@@ -1,3 +1,4 @@
+
 <!--
  * @Descripttion: 
  * @Author: wenlong
@@ -54,6 +55,18 @@ export default {
         label: "label",
         children: "children",
       },
+      /*
+        id:唯一标识
+        label:显示在页面的中文名称
+        name:图层名称/模型名称
+        url:服务加载的地址
+        attrUrl：获取属性的url
+        wfsUrl:wfs的url
+        layers:图层名称
+        serviceType:加载的服务类型  决定使用什么接口进行加载
+        dataType：分类类别
+        geometryType:图形类别
+      */
       treeData: [
         {
           id: "1",
@@ -71,10 +84,6 @@ export default {
                   name: "geoserver_wms_geomap",
                   url: "http://192.10.3.237/geoserver/crcc-dev/wms",
                   layers: "crcc-dev:geomap-01",
-
-                  // url:"http://10.101.140.3/geoserver/db-24/wms",
-                  // layers:"map-124",
-                  // layers:"map_124_lyr_1",
                   serviceType: "wms",
                   dataType: 1,
                   children: [
@@ -86,8 +95,11 @@ export default {
                       url: "http://192.10.3.237/geoserver/crcc-dev/wms",
                       attrUrl:
                         "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geostratumzone&outputFormat=application/json",
+                      wfsUrl:
+                        "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geostratumzone&maxFeatures=10000&outputFormat=application/json",
                       value: "geostratumzone",
                       serviceType: "wms",
+                      geometryType: "Point",
                       dataType: 1,
                     },
                     {
@@ -147,6 +159,185 @@ export default {
                       attrUrl:
                         "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:alterationt&outputFormat=application/json",
                       value: "alterationt",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                  ],
+                },
+                {
+                  id: "1-2-1",
+                  label: "区域水文地质图",
+                  name: "geoserver_wms_geomap_sw",
+                  url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                  layers: "crcc-dev:geomap-01",
+                  serviceType: "wms",
+                  dataType: 1,
+                  children: [
+                    {
+                      id: "1-2-1-9",
+                      label: "面1",
+                      layers: "hydroPloy1",
+                      name: "hydroPloy1",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy1&outputFormat=application/json",
+                      value: "hydroPloy1",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-10",
+                      label: "面2",
+                      layers: "hydroPloy2",
+                      name: "hydroPloy2",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy2&outputFormat=application/json",
+                      value: "hydroPloy2",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-11",
+                      label: "面3",
+                      layers: "hydroPloy3",
+                      name: "hydroPloy3",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy3&outputFormat=application/json",
+                      value: "hydroPloy3",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-12",
+                      label: "面4",
+                      layers: "hydroPloy4",
+                      name: "hydroPloy4",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy4&outputFormat=application/json",
+                      value: "hydroPloy4",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-13",
+                      label: "面5",
+                      layers: "hydroPloy5",
+                      name: "hydroPloy5",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy5&outputFormat=application/json",
+                      value: "hydroPloy5",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-14",
+                      label: "面6",
+                      layers: "hydroPloy6",
+                      name: "hydroPloy6",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy6&outputFormat=application/json",
+                      value: "hydroPloy6",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-4",
+                      label: "线1",
+                      layers: "hydroLine1",
+                      name: "hydroLine1",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine1&outputFormat=application/json",
+                      value: "hydroLine1",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-5",
+                      label: "线2",
+                      layers: "hydroLine2",
+                      name: "hydroLine2",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine2&outputFormat=application/json",
+                      value: "hydroLine2",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-6",
+                      label: "线3",
+                      layers: "hydroLine3",
+                      name: "hydroLine3",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine3&outputFormat=application/json",
+                      value: "hydroLine3",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-7",
+                      label: "线4",
+                      layers: "hydroLine4",
+                      name: "hydroLine4",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine4&outputFormat=application/json",
+                      value: "hydroLine4",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-8",
+                      label: "线5",
+                      layers: "hydroLine5",
+                      name: "hydroLine5",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine5&outputFormat=application/json",
+                      value: "hydroLine5",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-1",
+                      label: "点1",
+                      layers: "hydroPnt1",
+                      name: "hydroPnt1",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt1&outputFormat=application/json",
+                      value: "hydroPnt1",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-2",
+                      label: "点2",
+                      layers: "hydroPnt2",
+                      name: "hydroPnt2",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt2&outputFormat=application/json",
+                      value: "hydroPnt2",
+                      serviceType: "wms",
+                      dataType: 1,
+                    },
+                    {
+                      id: "1-2-1-3",
+                      label: "点3",
+                      layers: "hydroPnt3",
+                      name: "hydroPnt3",
+                      url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+                      attrUrl:
+                        "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt3&outputFormat=application/json",
+                      value: "hydroPnt3",
                       serviceType: "wms",
                       dataType: 1,
                     },
@@ -315,6 +506,48 @@ export default {
             },
           ],
         },
+        {
+          id: "7",
+          label: "地震数据服务",
+          children: [
+            {
+              id: "7-1",
+              label: "地震加速度反应谱",
+              name: "seic_a_fin",
+              url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+              attrUrl:"http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:seic_a_fin&outputFormat=application/json",
+              layers: "seic_a_fin",
+              serviceType: "wms",
+              dataType: 7,
+            },
+              {
+              id: "7-2",
+              label: "地震加速度周期",
+              name: "seic_c_fin",
+              url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+              attrUrl:"http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:seic_c_fin&outputFormat=application/json",
+              layers: "seic_c_fin",
+              serviceType: "wms",
+              dataType: 7,
+            },
+          ],
+        },
+        {
+          id: "8",
+          label: "地灾数据服务",
+          children: [
+            {
+              id: "8-1",
+              label: "全国地灾数据",
+              name: "geohazard",
+              url: "http://192.10.3.237/geoserver/crcc-dev/wms",
+              attrUrl:"http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geohazard&outputFormat=application/json",
+              layers: "geohazard",
+              serviceType: "wms",
+              dataType: 8,
+            },
+          ],
+        },
         // {  WFSServer要么像WMS调好，要么就直接删掉不要 sisi
         //   id: "2-2",
         //   label: "WfsServer",
@@ -470,13 +703,13 @@ export default {
       });
     },
     handleContextMenu(event, dataList) {
-      event.preventDefault();
-      if (!dataList.children) {
-        this.positionY = event.pageX;
-        this.positionX = event.pageY;
-        this.nodeData = JSON.parse(JSON.stringify(dataList));
-        this.isShowDialog = true;
-      }
+      // event.preventDefault();
+      // if (!dataList.children) {
+      //   this.positionY = event.pageX;
+      //   this.positionX = event.pageY;
+      //   this.nodeData = JSON.parse(JSON.stringify(dataList));
+      //   this.isShowDialog = true;
+      // }
     },
   },
   created() {},

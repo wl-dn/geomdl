@@ -104,7 +104,6 @@
 
 <script>
 import * as Cesium from "cesium";
-
 import adjustMdlComponent from "../../components/cesiumComponents/adjustMdlTool.vue";
 import mapView from "../../components/cesiumComponents/2dView.vue";
 import mdlView from "../../components/cesiumComponents/mdlView.vue";
@@ -131,6 +130,7 @@ import PathGraphics from "cesium/Source/DataSources/PathGraphics";
 import Viewer from "cesium/Source/Widgets/Viewer/Viewer";
 
 import proj4 from "proj4";
+import DrawUtils from "../../utils/cesiumUtils/DrawUtils";
 
 let tileSetList = [];
 let viewer = null;
@@ -326,6 +326,18 @@ export default {
           },
         },
       });
+
+
+     
+
+      if (Cesium.FeatureDetection.supportsImageRenderingPixelated()) {
+        //判断是否支持图像渲染像素化处理
+        viewer.resolutionScale = window.devicePixelRatio;
+      }
+      //开启抗锯齿
+      viewer.scene.fxaa = true;
+      viewer.scene.postProcessStages.fxaa.enabled = true;
+
       // 修改背景颜色
       viewer.scene.skyBox.show = false;
       viewer.scene.sun.show = false;
@@ -442,7 +454,9 @@ export default {
 
       // 定位到该模型
       if (name === "holemdl") {
-        console.log("钻孔模型定位", mdlCenterParams);
+        viewer.zoomTo(tileSet, initialOrientation);
+        return;
+
         // viewer.zoomTo(
         //   tileSet,
         //   new Cesium.HeadingPitchRange(
@@ -852,6 +866,7 @@ export default {
                 // 只有显示的并且是geoserver和arcgisserver的可以用
                 // 确定哪个图层可查
                 let tempImageryProvider = this.getQueryImageryProvider();
+                console.log(tempImageryProvider);
                 if (!tempImageryProvider.length) return;
                 for (const tmpImgProvider of tempImageryProvider) {
                   if (tmpImgProvider.ready) {
@@ -877,7 +892,10 @@ export default {
                         for (let k in properList) {
                           if (
                             layerName === "mapserver_geomap" ||
-                            layerName === "1,2,3,4,5,6"
+                            layerName === "1,2,3,4,5,6" ||
+                            layerName === "geomap_35_lyr_2" ||
+                            layerName === "geohazard" ||
+                            layerName.indexOf("hydro") >= 0
                           ) {
                             obj = {
                               label: k,
@@ -1073,7 +1091,6 @@ export default {
       // Pick a new feature
       let pickedFeature = viewer.scene.pick(movement.position);
       if (!Cesium.defined(pickedFeature)) {
-        // this.isLayerDialogVisible = false;
         return -1;
       }
 
@@ -1083,116 +1100,99 @@ export default {
 
       rightClickHighted.feature = pickedFeature;
       Cesium.Color.clone(pickedFeature.color, rightClickHighted.originalColor);
-      console.log("pickedFeature:", pickedFeature);
-      console.log("rightClickHighted:", rightClickHighted);
       pickedFeature.color = Cesium.Color.BLUE;
-      console.log(pickedFeature);
-      // let pickedFeature = viewer.scene.pick(movement.position);
-      if (Cesium.defined(pickedFeature)) {
-        if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
-          if (pickedFeature.tileset.name === "holemdl") {
-            let cartesian = viewer.scene.pickPosition(movement.position);
-            let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-            const holecode = pickedFeature.getProperty("钻孔编码");
-            console.log(
-              pickedFeature.getProperty("孔口标高"),
-              this.getMdlDegreeCenter(cartographic)[0]
-            );
-            let mhDistance =
-              pickedFeature.getProperty("孔口标高") -
-              this.getMdlDegreeCenter(cartographic)[0];
-            console.log(mhDistance);
-            this.$http
-              .get("getHoleLayerInfoByHoleCode", {
-                params: {
-                  holecode: holecode,
-                },
-              })
-              .then((res) => {
-                this.layerInfo = [];
-                let count = this.layerInfo.length;
+      if (
+        Cesium.defined(pickedFeature) &&
+        pickedFeature instanceof Cesium.Cesium3DTileFeature
+      ) {
+        if (pickedFeature.tileset.name === "holemdl") {
+          let cartesian = viewer.scene.pickPosition(movement.position);
+          let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+          const holecode = pickedFeature.getProperty("钻孔编码");
+          const mhDistance =
+            pickedFeature.getProperty("孔口标高") -
+            his.getMdlDegreeCenter(cartographic)[0];
 
-                this.setColorTable(res.data.data, mhDistance);
-
-                this.drillName = holecode;
-                this.editableTabsValue = "1";
-                this.layerInfo.push({
-                  title: holecode,
-                  name: ++count + "",
-                  tableData: res.data.data,
-                });
-                this.isLayerDialogVisible = true;
-                this.isCommonVisible = false;
-              });
-          } else if (pickedFeature.tileset.name === "3dmdl") {
-            let titles = "地层编码";
-            let resStr = pickedFeature.getProperty("地层编码");
-            let obj = [
-              {
-                label: titles,
-                value: resStr,
+          this.$http
+            .get("getHoleLayerInfoByHoleCode", {
+              params: {
+                holecode: holecode,
               },
-            ];
-            if (obj.length) {
-              this.tableCommonData = [];
-              let count = this.tableCommonData.length;
+            })
+            .then((res) => {
+              this.layerInfo = [];
+              let count = this.layerInfo.length;
+
+              this.setColorTable(res.data.data, mhDistance);
+
+              this.drillName = holecode;
               this.editableTabsValue = "1";
-              this.tableCommonData.push({
-                title: "模型分层信息",
+              this.layerInfo.push({
+                title: holecode,
                 name: ++count + "",
-                tableData: obj,
-                tableType: 1,
+                tableData: res.data.data,
               });
-              this.isCommonVisible = true;
-              this.isLayerDialogVisible = false;
-            }
-          } else if (pickedFeature.tileset.name === "secmdl") {
-            let tilteName = "剖面地层信息";
-            let flagInfo = "secMdl";
-            if (pickedFeature.getProperty("boundarytype") === "地层岩性界线") {
-              tilteName = "剖面地质界线";
-              flagInfo = "secLine";
-            }
+              this.isLayerDialogVisible = true;
+              this.isCommonVisible = false;
+            });
+        } else if (pickedFeature.tileset.name === "3dmdl") {
+          let titles = "地层编码";
+          let resStr = pickedFeature.getProperty("地层编码");
+          let obj = [
+            {
+              label: titles,
+              value: resStr,
+            },
+          ];
+          if (obj.length) {
             this.tableCommonData = [];
-            let tmp = [];
-            let propertyList = pickedFeature.getPropertyNames();
-            console.log(propertyList);
-            console.log(pickedFeature.getProperty("boundarytype"));
-            for (let i = 0; i < propertyList.length; i++) {
-              let chineseFiled = attributeCompare[flagInfo].get(
-                propertyList[i]
-              );
-              if (chineseFiled) {
-                let obj = {
-                  label: chineseFiled,
-                  value: pickedFeature.getProperty(propertyList[i]),
-                };
-                tmp.push(obj);
-              }
-            }
-            if (tmp.length) {
-              this.isCommonVisible = true;
-              this.isLayerDialogVisible = false;
-              this.editableTabsValue = "1";
-              let count = this.tableCommonData.length;
-              this.tableCommonData.push({
-                title: tilteName,
-                name: ++count + "",
-                tableData: tmp,
-                tableType: 1,
-              });
+            let count = this.tableCommonData.length;
+            this.editableTabsValue = "1";
+            this.tableCommonData.push({
+              title: "模型分层信息",
+              name: ++count + "",
+              tableData: obj,
+              tableType: 1,
+            });
+            this.isCommonVisible = true;
+            this.isLayerDialogVisible = false;
+          }
+        } else if (pickedFeature.tileset.name === "secmdl") {
+          let tilteName = "剖面地层信息";
+          let flagInfo = "secMdl";
+          if (pickedFeature.getProperty("boundarytype") === "地层岩性界线") {
+            tilteName = "剖面地质界线";
+            flagInfo = "secLine";
+          }
+          this.tableCommonData = [];
+          let tmp = [];
+          let propertyList = pickedFeature.getPropertyNames();
+          console.log(propertyList);
+          console.log(pickedFeature.getProperty("boundarytype"));
+          for (let i = 0; i < propertyList.length; i++) {
+            let chineseFiled = attributeCompare[flagInfo].get(propertyList[i]);
+            if (chineseFiled) {
+              let obj = {
+                label: chineseFiled,
+                value: pickedFeature.getProperty(propertyList[i]),
+              };
+              tmp.push(obj);
             }
           }
-          return 1;
+          if (tmp.length) {
+            this.isCommonVisible = true;
+            this.isLayerDialogVisible = false;
+            this.editableTabsValue = "1";
+            let count = this.tableCommonData.length;
+            this.tableCommonData.push({
+              title: tilteName,
+              name: ++count + "",
+              tableData: tmp,
+              tableType: 1,
+            });
+          }
         }
-        // else {
-        //   Notification({
-        //     title: "提示",
-        //     message: "该3dtiles没有属性",
-        //     duration: "2000",
-        //   });
-        //   return 0;
-        // }
+        return 1;
       }
       return -1;
     },
@@ -1422,10 +1422,18 @@ export default {
 
           break;
         case 7:
-          CesiumUtils.viewCesiumUtils().zoomOut(viewer);
-
+          new DrawUtils(viewer).measureLine();
           break;
-
+        case 9:
+          new DrawUtils(viewer).removeMeasureEntites();
+          break;
+        case 10:
+          if (item.active) {
+            CesiumUtils.viewCesiumUtils().createGrid(viewer);
+          } else {
+            CesiumUtils.viewCesiumUtils().clearGrid(viewer);
+          }
+          break;
         default:
           break;
       }
@@ -1434,10 +1442,6 @@ export default {
      *  初始定位中国
      * */
     flytochina() {
-      // viewer.camera.flyTo({
-      //     destination: Cesium.Cartesian3.fromDegrees(116.435314, 40.960521, 10000000.0),
-      //     duration: 8
-      // });
       viewer.camera.flyTo({
         destination: Cesium.Cartesian3.fromDegrees(
           110.435314,
@@ -1453,17 +1457,6 @@ export default {
           // 定位完成之后的回调函数
         },
       });
-      // let initialPosition = Cesium.Cartesian3.fromDegrees(110.435314, 40.960521, 500000.0 );
-      // let initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
-      //   21.27879878293835,
-      //   -21.34390550872461,
-      //   0.0716951918898415
-      // );
-      // viewer.scene.camera.setView({
-      //   destination: initialPosition,
-      //   orientation: initialOrientation,
-      //   endTransform: Cesium.Matrix4.IDENTITY,
-      // });
     },
     // 接收线框
     receptWifeinfo(val) {
@@ -1596,6 +1589,7 @@ export default {
         item.cqlStr,
         item.lon,
         item.lat,
+        item.geometryType,
         item.active
       );
       this.activeImageryNameSet.add("temp" + item.layer + item.label);
@@ -1684,18 +1678,6 @@ export default {
      */
     setFeatureColor(HightedFeatureObj, currentFeature) {
       if (Cesium.defined(HightedFeatureObj.feature)) {
-        // if(HightedFeatureObj.type === "Entity"){
-        // }else if(HightedFeatureObj.type === "Cesium3DTileset"){
-        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
-        //   HightedFeatureObj.feature = undefined;
-        //   HightedFeatureObj.type = undefined;
-        // }else if(HightedFeatureObj.type === "Billboard"){
-        //   HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
-        //   HightedFeatureObj.feature = undefined;
-        //   HightedFeatureObj.type = undefined;
-        // }else if(HightedFeatureObj.type === "Primitive"){
-
-        // }
         HightedFeatureObj.feature.color = HightedFeatureObj.originalColor;
         HightedFeatureObj.feature = undefined;
         HightedFeatureObj.type = undefined;
@@ -1795,14 +1777,12 @@ export default {
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面
     // 加载三维地形
-    // new TerrainLoader().loadLocalTerrain(
-    //   "http://192.10.3.237:81/tsyTerrain/",
-    //   viewer,
-    //   true
-    // );
+    new TerrainLoader().loadLocalTerrain(
+      "http://192.10.3.237:81/tsyTerrain/",
+      viewer,
+      true
+    );
     this.registerOnclickEvent();
-    // let a = CesiumUtils.drawUtils(viewer);
-    // a.createPointBuffer([106.422638966289, 29.5698367125623], 100000);
     eventVue.$emit("sendCesiumViewer", viewer);
     // this.getGeoServerWmsBoundingBox("http://192.10.3.237/geoserver/crcc-dev/wms");
   },

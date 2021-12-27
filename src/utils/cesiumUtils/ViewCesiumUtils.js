@@ -168,6 +168,89 @@ export default class ViewCesiumUtils {
             return 18;
         }
     }
+    static createGrid(viewer) {
+        const entities = viewer.entities;
+        //每隔1读绘制一条经度线和经度标注,自己控制间隔
+        for (let lang = -180; lang <= 180; lang += 1) {
+            let text = "";
+            if (lang === 0) {
+                text = "0";
+            }
+            text += lang === 0 ? "" : "" + lang + "°";
+            if (lang === -180) {
+                text = "";
+            }
 
-    
+            entities.add({
+                position: Cesium.Cartesian3.fromDegrees(lang, 0),
+                polyline: {
+                    positions: Cesium.Cartesian3.fromDegreesArray([
+                        lang,
+                        -90,
+                        lang,
+                        0,
+                        lang,
+                        90,
+                    ]),
+                    width: 1.0,
+                    material: Cesium.Color.YELLOW,
+                    clampToGround: true,
+                },
+                label: {
+                    text: text,
+                    verticalOrigin: Cesium.VerticalOrigin.TOP,
+                    font: "12px sans-serif",
+                    fillColor: Cesium.Color.WHITE,
+                },
+                name: "uniqueGridland" + lang
+            });
+        }
+        //纬度
+        let langS = [];
+        for (let lang = -180; lang <= 180; lang += 5) {
+            langS.push(lang);
+        }
+        //每隔10读绘制一条纬度线和纬度标注,自己控制间隔
+        for (let lat = -80; lat <= 80; lat += 1) {
+            let text = "";
+            text += "" + lat + "°";
+            if (lat === 0) {
+                text = "";
+            }
+            entities.add({
+                position: Cesium.Cartesian3.fromDegrees(0, lat),
+                polyline: {
+                    positions: Cesium.Cartesian3.fromDegreesArray(
+                        langS
+                            .map((long) => {
+                                return [long, lat].join(",");
+                            })
+                            .join(",")
+                            .split(",")
+                            .map((item) => Number(item))
+                    ),
+                    width: 1.0,
+                    material: Cesium.Color.YELLOW,
+                    clampToGround: true,
+                },
+                label: {
+                    text: text,
+                    font: "12px sans-serif",
+                    fillColor: Cesium.Color.WHITE,
+                },
+                name: "uniqueGridlat" + lat
+            });
+        }
+
+    }
+    static clearGrid(viewer) {
+        let entities = viewer.entities._entities.values;
+        for (let i = 0; i < entities.length; i++) {
+            if (entities[i]._name.indexOf("uniqueGrid") >= 0) {
+                viewer.entities.remove(entities[i])
+                i = -1;
+            }
+        }
+    }
+
 }

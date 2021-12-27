@@ -7,10 +7,9 @@
  * @LastEditTime: 2021-08-24 21:28:38
  */
 import * as Cesium from "cesium"
-import * as  turf from "@turf/turf"
 export default class DrawUtils {
-    constructor(viewer) {
-        this._viewer = viewer;
+    constructor(_viewer) {
+        this._viewer = _viewer;
         this._excavateMinHeight = 9999 //最低挖掘海拔值
     }
     /**
@@ -22,18 +21,19 @@ export default class DrawUtils {
     drawPointEntity(position, config) {
         config = config || {};
         let pointGeometry = this._viewer.entities.add({
-            name: "点几何对象",
-            position: Cesium.Cartesian3.fromDegrees(position[0], position[1], 0),
-            // position: position,
+            name:"绘制点",
+            position: position,
             point: {
                 color: Cesium.Color.SKYBLUE,
-                pixelSize: 10,
+                pixelSize: 5,
                 outlineColor: Cesium.Color.YELLOW,
                 outlineWidth: 3,
-                disableDepthTestDistance: Number.POSITIVE_INFINITY
+                heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                // color: Cesium.Color.WHITE,
+                // pixelSize: 5,
+                // heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
             }
         })
-        console.log(pointGeometry);
         return pointGeometry
     }
     /**
@@ -46,10 +46,11 @@ export default class DrawUtils {
         if (positionLine.length < 1) return;
         config = config || {};
         let polylineGeometry = this._viewer.entities.add({
-            name: "线几何对象",
+            name:"绘制线",
             polyline: {
                 positions: positionLine,
                 width: config.width ? config.width : 5.0,
+                clampToGround: true,
                 material: new Cesium.PolylineGlowMaterialProperty({
                     color: config.color ? new Cesium.Color.fromCssColorString(config.color) : Cesium.Color.GOLD,
                 }),
@@ -69,17 +70,20 @@ export default class DrawUtils {
     drawPolygonEntity(positionPolygon, config) {
         if (positionPolygon.length < 2) return;
         config = config || {};
-        var polygonGeometry = this._viewer.entities.add({
-            id: "1-1",
-            name: "面几何对象",
+        let polygonGeometry = this._viewer.entities.add({
             polygon: {
-                height: 0.1,
-                hierarchy: new Cesium.PolygonHierarchy(positionPolygon),
-                material: config.color ? new Cesium.Color.fromCssColorString(config.color).withAlpha(.2) : new Cesium.Color.fromCssColorString("#FFD700").withAlpha(.2),
+                // height: 0.1,
+                // hierarchy: new Cesium.PolygonHierarchy(positionPolygon),
+                // hierarchy: positionPolygon,
+                //material: config.color ? new Cesium.Color.fromCssColorString(config.color).withAlpha(.2) : new Cesium.Color.fromCssColorString("#FFD700").withAlpha(.9),
                 // perPositionHeight: true,
-                outline: true,
+                // outline: true,
                 // 想设置outline，必须要有高度
-                outlineWidth: 1
+                // outlineWidth: 1
+                hierarchy: positionPolygon,
+                material: new Cesium.ColorMaterialProperty(
+                    Cesium.Color.WHITE.withAlpha(0.7)
+                ),
             }
         });
         return polygonGeometry;
@@ -111,6 +115,18 @@ export default class DrawUtils {
             return null;
         }
     }
+
+    getEntitiesByName(name){
+        let entitiesCollect = this._viewer.entities.values;
+        let tempEntites = [];
+        for(let i=0;i<entitiesCollect.length;i++) {
+            if(entitiesCollect[i].name === name) {
+                tempEntites.push(entitiesCollect[i])
+            }
+        }
+        return tempEntites
+    }
+ 
 
 
 
@@ -222,7 +238,7 @@ export default class DrawUtils {
 
         //根据采样地形高度更新坐标
         // 不更新的话，高度一般都是0
-        console.log(lerpPositions);
+        // console.log(lerpPositions);
         await Cesium.sampleTerrainMostDetailed(this._viewer.terrainProvider, lerpPositions)
 
         lerpPositions.forEach(lerpPosition => {
@@ -283,66 +299,216 @@ export default class DrawUtils {
         // this.minHeight = this._targetHeight
     }
 
-    /**
-    * @descripttion: 生成点缓冲区
-    * @param {*} 中心点坐标array
-    * @param {*} 缓冲区半径int
-    * @return {*} true or false
-    */
-    createPointBuffer(point, radis) {
-        this.drawPointEntity(point);
-        let pointF = turf.point(point);
-        let buffered = turf.buffer(pointF, radis, { units: 'meters' });
-        let coordinates = buffered.geometry.coordinates;
-        let points = coordinates[0];
-        let degreesArray = this._pointsToDegreesArray(points);
-        this._addBufferPolyogn(Cesium.Cartesian3.fromDegreesArray(degreesArray));
+    // 测量距离
+    measureLine() {
+        let handler = new Cesium.ScreenSpaceEventHandler(this._viewer.scene.canvas);
+        let activeShapePoints = [];
+        let activeShape;
+        let floatingPoint;
+        let distance = 0;
+        handler.setInputAction((movement) => {
+            let earthPosition = this._viewer.scene.pickPosition(movement.position);
+            if (Cesium.defined(earthPosition)) {
+                if (activeShapePoints.length === 0) {
+                    floatingPoint = this.drawPointEntity(earthPosition);
+                    activeShapePoints.push(earthPosition);
+                    let dynamicPositions = new Cesium.CallbackProperty(function () {
+                        return activeShapePoints;
+                    }, false);
+                    activeShape = this.drawPolyLineEntity(dynamicPositions);  // 绘制线
+                }
+                activeShapePoints.push(earthPosition);
+                // this.drawPointEntity(earthPosition);
+                let textDisance = distance + "米";
+                this._viewer.entities.add({
+                    name: '绘制点',
+                    position: activeShapePoints[activeShapePoints.length - 1],
+                    point: {
+                        pixelSize: 5,
+                        color: Cesium.Color.RED,
+                        outlineColor: Cesium.Color.WHITE,
+                        outlineWidth: 2,
+                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                    },
+                    label: {
+                        text: textDisance,
+                        font: '18px sans-serif',
+                        fillColor: Cesium.Color.GOLD,
+                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                        outlineWidth: 2,
+                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                        pixelOffset: new Cesium.Cartesian2(20, -20),
+                    }
+                });
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction((movement) => {
+            if (Cesium.defined(floatingPoint)) {
+                let newPosition = this._viewer.scene.pickPosition(movement.endPosition);
+                if (Cesium.defined(newPosition)) {
+                    // floatingPoint.position.setValue(newPosition);
+                    activeShapePoints.pop();
+                    activeShapePoints.push(newPosition);
+                    distance = this.getSpaceDistance(activeShapePoints);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction((movement) => {
+            handler.destroy(); //关闭事件句柄
+            handler = undefined;
+            activeShapePoints.pop();
+            this.drawPolyLineEntity(activeShapePoints);
+            console.log(this._viewer.entities);
+            // this._viewer.entities.remove(floatingPoint);
+            // this._viewer.entities.remove(activeShape);
+            floatingPoint = undefined;
+            activeShape = undefined;
+            activeShapePoints = [];
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+
     }
-    //添加缓冲区
-    _addBufferPolyogn(positions) {
-        this._viewer.entities.add({
-            polygon: {
-                hierarchy: new Cesium.PolygonHierarchy(positions),
-                material: Cesium.Color.RED.withAlpha(0.6),
-                classificationType: Cesium.ClassificationType.BOTH
-            },
+    // 测量面积
+    measurePloygon() {
+        let handler = new Cesium.ScreenSpaceEventHandler(this._viewer.scene.canvas);
+        let activeShapePoints = [];
+        let activeShape;
+        let floatingPoint;
+        handler.setInputAction((movement) => {
+            let earthPosition = this._viewer.scene.pickPosition(movement.position);
+            if (Cesium.defined(earthPosition)) {
+                if (activeShapePoints.length === 0) {
+                    floatingPoint = this.drawPointEntity(earthPosition);
+                    activeShapePoints.push(earthPosition);
+                    let dynamicPositions = new Cesium.CallbackProperty(function () {
+                        return new Cesium.PolygonHierarchy(activeShapePoints);
+                    }, false);
+                    activeShape = this.drawPolygonEntity(dynamicPositions);
+                }
+                activeShapePoints.push(earthPosition);
+                this.drawPointEntity(earthPosition);
+            }
+        }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        handler.setInputAction((movement) => {
+            if (Cesium.defined(floatingPoint)) {
+                let newPosition = this._viewer.scene.pickPosition(movement.endPosition);
+                if (Cesium.defined(newPosition)) {
+                    floatingPoint.position.setValue(newPosition);
+                    activeShapePoints.pop();
+                    activeShapePoints.push(newPosition);
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+        handler.setInputAction((movement) => {
+            handler.destroy(); //关闭事件句柄
+            handler = undefined;
+            activeShapePoints.pop();
+            this.drawPolygonEntity(activeShapePoints);
+            this._viewer.entities.remove(floatingPoint);
+            this._viewer.entities.remove(activeShape);
+            floatingPoint = undefined;
+            activeShape = undefined;
+            activeShapePoints = [];
+        }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+    }
+    // 删除测量用的entity
+    removeMeasureEntites() {
+        // 删除点
+        debugger
+        let pointEntites = this.getEntitiesByName('绘制点');
+        for(let i= 0;i<pointEntites.length;i++) {
+            this._viewer.entities.remove(pointEntites[i])
+        }
+         // 删除点
+         let lineEntites = this.getEntitiesByName('绘制线');
+         for(let i= 0;i<lineEntites.length;i++) {
+             this._viewer.entities.remove(lineEntites[i])
+         }
+    }
+    _terminateShape() {
+        activeShapePoints.pop();
+        this.drawPolyLineEntity(activeShapePoints);
+        this._viewer.entities.remove(floatingPoint);
+        this._viewer.entities.remove(activeShape);
+        floatingPoint = undefined;
+        activeShape = undefined;
+        activeShapePoints = [];
+    }
+    //空间两点距离计算函数
+    getSpaceDistance(positions) {
+
+        //只计算最后一截，与前面累加
+        //因move和鼠标左击事件，最后两个点坐标重复
+        // let i = positions.length - 3;
+        // let point1cartographic = Cesium.Cartographic.fromCartesian(positions[i]);
+        // let point2cartographic = Cesium.Cartographic.fromCartesian(positions[i + 1]);
+        // getTerrainDistance(point1cartographic, point2cartographic);
+
+        let distance = 0;
+        for (let i = 0; i < positions.length - 1; i++) {
+
+            let point1cartographic = Cesium.Cartographic.fromCartesian(positions[i]);
+            let point2cartographic = Cesium.Cartographic.fromCartesian(positions[i + 1]);
+            /**根据经纬度计算出距离**/
+            let geodesic = new Cesium.EllipsoidGeodesic();
+            geodesic.setEndPoints(point1cartographic, point2cartographic);
+            let s = geodesic.surfaceDistance;
+            //console.log(Math.sqrt(Math.pow(distance, 2) + Math.pow(endheight, 2)));
+            //返回两点之间的距离
+            s = Math.sqrt(Math.pow(s, 2) + Math.pow(point2cartographic.height - point1cartographic.height, 2));
+            distance = distance + s;
+        }
+        return distance.toFixed(2);
+    }
+
+    getTerrainDistance(point1cartographic, point2cartographic) {
+        let geodesic = new Cesium.EllipsoidGeodesic();
+        geodesic.setEndPoints(point1cartographic, point2cartographic);
+        let s = geodesic.surfaceDistance;
+        let cartoPts = [point1cartographic];
+        for (let jj = 1000; jj < s; jj += 1000) {　　//分段采样计算距离
+            let cartoPt = geodesic.interpolateUsingSurfaceDistance(jj);
+            cartoPts.push(cartoPt);
+        }
+        cartoPts.push(point2cartographic);
+        //返回两点之间的距离
+        let promise = Cesium.sampleTerrain(this._viewer.terrainProvider, 8, cartoPts);
+        Cesium.when(promise, function (updatedPositions) {
+            for (let jj = 0; jj < updatedPositions.length - 1; jj++) {
+                let geoD = new Cesium.EllipsoidGeodesic();
+                geoD.setEndPoints(updatedPositions[jj], updatedPositions[jj + 1]);
+                let innerS = geoD.surfaceDistance;
+                innerS = Math.sqrt(Math.pow(innerS, 2) + Math.pow(updatedPositions[jj + 1].height - updatedPositions[jj].height, 2));
+                distance += innerS;
+            }
+            //在三维场景中添加Label
+            let lon1 = this._viewer.scene.globe.ellipsoid.cartesianToCartographic(labelPt).longitude;
+            let lat1 = this._viewer.scene.globe.ellipsoid.cartesianToCartographic(labelPt).latitude;
+            let lonLat = "(" + Cesium.Math.toDegrees(lon1).toFixed(2) + "," + Cesium.Math.toDegrees(lat1).toFixed(2) + ")";
+            let textDisance = distance.toFixed(2) + "米";
+            if (distance > 10000)
+                textDisance = (distance / 1000.0).toFixed(2) + "千米";
+            floatingPoint = this._viewer.entities.add({
+                name: '贴地距离',
+                position: labelPt,
+                point: {
+                    pixelSize: 5,
+                    color: Cesium.Color.RED,
+                    outlineColor: Cesium.Color.WHITE,
+                    outlineWidth: 2,
+                },
+                label: {
+                    text: lonLat + textDisance,
+                    font: '18px sans-serif',
+                    fillColor: Cesium.Color.GOLD,
+                    style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                    outlineWidth: 2,
+                    verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                    pixelOffset: new Cesium.Cartesian2(20, -20),
+                }
+            });
         });
     }
-    _pointsToDegreesArray(points) {
-        let degreesArray = [];
-        points.map(item => {
-            degreesArray.push(item[0]);
-            degreesArray.push(item[1]);
-        });
-        return degreesArray;
-    }
-
-    /**
-   * @descripttion: 生成点缓冲区
-   * @param {*} 某一点的经纬度
-   * @param {*} 另一点的经纬度
-   * @return {*} true or false
-   */
-    // 计算经纬度之间的距离（m）
-    caculateLL(lat1, lng1, lat2, lng2) {
-        let radLat1 = (lat1 * Math.PI) / 180.0;
-        let radLat2 = (lat2 * Math.PI) / 180.0;
-        let a = radLat1 - radLat2;
-        let b = (lng1 * Math.PI) / 180.0 - (lng2 * Math.PI) / 180.0;
-        let s =
-            2 *
-            Math.asin(
-                Math.sqrt(
-                    Math.pow(Math.sin(a / 2), 2) +
-                    Math.cos(radLat1) *
-                    Math.cos(radLat2) *
-                    Math.pow(Math.sin(b / 2), 2)
-                )
-            );
-        s = s * 6378.137;
-        s = Math.round(s * 10000) / 10;
-        return s;
-    }
-
-
 }

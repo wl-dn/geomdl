@@ -6,6 +6,34 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "5085760",
+      "name": "网格开",
+      "font_class": "wanggekai",
+      "unicode": "e783",
+      "unicode_decimal": 59267
+    },
+    {
+      "icon_id": "1263232",
+      "name": "测量",
+      "font_class": "celiang",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "14279833",
+      "name": "清除绘制",
+      "font_class": "qingchuhuizhi",
+      "unicode": "e625",
+      "unicode_decimal": 58917
+    },
+    {
+      "icon_id": "15824157",
+      "name": "【视图】测面积",
+      "font_class": "shitucemianji",
+      "unicode": "e658",
+      "unicode_decimal": 58968
+    },
+    {
       "icon_id": "18497349",
       "name": "地上地下",
       "font_class": "dishangdixia",

@@ -245,6 +245,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geostratumzone&maxFeatures=10000&outputFormat=application/json",
           value: "geostratumzone",
           dataType: 1,
+          geometryType: "ploygon",
         },
         {
           label: "围岩蚀变地层",
@@ -256,6 +257,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:aterationp&maxFeatures=10000&outputFormat=application/json",
           value: "aterationp",
           dataType: 1,
+          geometryType: "ploygon",
         },
         {
           label: "地层界线分布",
@@ -267,6 +269,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geoboundzone&maxFeatures=10000&outputFormat=application/json",
           value: "geoboundzone",
           dataType: 1,
+          geometryType: "line",
         },
         {
           label: "断层构造分布",
@@ -278,6 +281,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:faultzone&maxFeatures=10000&outputFormat=application/json",
           value: "faultzone",
           dataType: 1,
+          geometryType: "ploygon",
         },
         {
           label: "产状点",
@@ -289,6 +293,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:occurrence&maxFeatures=10000&outputFormat=application/json",
           value: "occurrence",
           dataType: 1,
+          geometryType: "Point",
         },
         {
           label: "围岩蚀变点",
@@ -300,6 +305,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:alterationt&maxFeatures=10000&outputFormat=application/json",
           value: "alterationt",
           dataType: 1,
+          geometryType: "Point",
         },
         {
           label: "地形地貌",
@@ -312,6 +318,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:landform&maxFeatures=10000&outputFormat=application/json",
           value: "landform",
           dataType: 2,
+          geometryType: "ploygon",
         },
         {
           label: "矿产开发及采空区",
@@ -324,6 +331,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:minegoaf&maxFeatures=10000&outputFormat=application/json",
           value: "minegoaf",
           dataType: 2,
+          geometryType: "ploygon",
         },
         {
           label: "特殊岩体",
@@ -336,6 +344,7 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:specialrocksoil&maxFeatures=10000&outputFormat=application/json",
           value: "specialrocksoil",
           dataType: 2,
+          geometryType: "ploygon",
         },
         {
           label: "不良地质",
@@ -348,6 +357,231 @@ export default {
             "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:unfavorablegeology&maxFeatures=10000&outputFormat=application/json",
           value: "unfavorablegeology",
           dataType: 2,
+          geometryType: "ploygon",
+        },
+
+        {
+          label: "面1",
+          layer: "hydroPloy1",
+          name: "hydroPloy1",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy1&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy1&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy1",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "面2",
+          layer: "hydroPloy2",
+          name: "hydroPloy2",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy2&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy2&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy2",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "面3",
+          layer: "hydroPloy3",
+          name: "hydroPloy3",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy3&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy3&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy3",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "面4",
+          layer: "hydroPloy4",
+          name: "hydroPloy4",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy4&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy4&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy4",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "面5",
+          layer: "hydroPloy5",
+          name: "hydroPloy5",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy5&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy5&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy5",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "面6",
+          layer: "hydroPloy6",
+          name: "hydroPloy6",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPloy6&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPloy6&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPloy6",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "ploygon",
+        },
+        {
+          label: "线1",
+          layer: "hydroLine1",
+          name: "hydroLine1",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine1&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroLine1&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroLine1",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "line",
+        },
+        {
+          label: "线2",
+          layer: "hydroLine2",
+          name: "hydroLine2",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine2&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroLine2&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroLine2",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "line",
+        },
+        {
+          label: "线3",
+          layer: "hydroLine3",
+          name: "hydroLine3",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine3&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroLine3&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroLine3",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "line",
+        },
+        {
+          label: "线4",
+          layer: "hydroLine4",
+          name: "hydroLine4",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine4&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroLine4&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroLine4",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "line",
+        },
+        {
+          label: "线5",
+          layer: "hydroLine5",
+          name: "hydroLine5",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroLine5&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroLine5&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroLine5",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "line",
+        },
+        {
+          label: "点1",
+          layer: "hydroPnt1",
+          name: "hydroPnt1",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt1&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPnt1&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPnt1",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "Point",
+        },
+        {
+          label: "点2",
+          layer: "hydroPnt2",
+          name: "hydroPnt2",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt2&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPnt2&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPnt2",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "Point",
+        },
+        {
+          label: "点3",
+          layer: "hydroPnt3",
+          name: "hydroPnt3",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:hydroPnt3&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:hydroPnt2&maxFeatures=10000&outputFormat=application/json",
+          value: "hydroPnt3",
+          serviceType: "wms",
+          dataType: 1,
+          geometryType: "Point",
+        },
+        {
+          label: "全国地灾数据",
+          name: "geohazard",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geohazard&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geohazard&maxFeatures=10000&outputFormat=application/json",
+          layer: "geohazard",
+          value: "geohazard",
+          serviceType: "wms",
+          dataType: 7,
+          geometryType: "Point",
+        },
+        {
+          label: "全国地震数据",
+          name: "geomap_35_lyr_2",
+          wmsUrl: "http://192.10.3.237/geoserver/crcc-dev/wms",
+          attrUrl:
+            "http://192.10.3.237/geoserver/wfs?request=describeFeatureType&typename=crcc-dev:geomap_35_lyr_2&outputFormat=application/json",
+          wfsUrl:
+            "http://192.10.3.237/geoserver/crcc-dev/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=crcc-dev:geomap_35_lyr_2&maxFeatures=10000&outputFormat=application/json",
+          layer: "geomap_35_lyr_2",
+          value: "geomap_35_lyr_2",
+          serviceType: "wms",
+          dataType: 8,
+          geometryType: "ploygon",
         },
       ],
       fieldOptions: [
@@ -413,6 +647,24 @@ export default {
         this.searchByTC();
       }
     },
+    getCoordinateByGeometryType(feature) {
+      let type = feature.geometry.type;
+      let coordinate;
+      switch (type) {
+        case "Point":
+          coordinate = feature.geometry.coordinates;
+          break;
+        case "MultiLineString":
+          coordinate = feature.geometry.coordinates[0][0];
+          break;
+        case "MultiPolygon":
+          coordinate = feature.geometry.coordinates[0][0][0];
+          break;
+        default:
+          break;
+      }
+      return coordinate;
+    },
     // 图层查询
     searchByTC() {
       if (this.layerSelectValue === "") return;
@@ -447,15 +699,18 @@ export default {
         let featureList = res.data.features;
         for (let i = 0; i < featureList.length; i++) {
           for (let k in featureList[i].properties) {
-            console.log(featureList[i].properties);
             if (k.indexOf("id") >= 0) {
+              let coordinates = this.getCoordinateByGeometryType(
+                featureList[i]
+              );
               let obj = {
                 url: tempLayreItem.wmsUrl,
                 layer: tempLayreItem.layer,
                 cqlStr: cqlStr,
                 label: `${k}=${featureList[i].properties[k]}`,
-                lon: featureList[i].geometry.coordinates[0][0][0][0],
-                lat: featureList[i].geometry.coordinates[0][0][0][1],
+                lon: coordinates[0],
+                lat: coordinates[1],
+                geometryType: tempLayreItem.geometryType,
               };
               sendData.push(obj);
               break;
@@ -501,6 +756,7 @@ export default {
 
       this.$http.get(url).then((res) => {
         const tempData = res.data.featureTypes[0].properties;
+        console.log(tempData);
         let resultData = [];
         for (let i = 0; i < tempData.length; i++) {
           let obj = {

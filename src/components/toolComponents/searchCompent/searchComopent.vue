@@ -165,6 +165,7 @@ export default {
             cqlStr: data[i].cqlStr,
             lon: data[i].lon,
             lat: data[i].lat,
+            geometryType:data[i].geometryType,
             active: false,
             type: 2,
           };
