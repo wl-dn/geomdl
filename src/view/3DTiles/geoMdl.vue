@@ -4,7 +4,7 @@
  * @version: 
  * @Date: 2021-08-19 20:18:14
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2021-12-27 09:38:27
+ * @LastEditTime: 2021-12-27 11:22:32
 -->
 <template>
   <div id="cesiumContainer">
@@ -331,6 +331,10 @@ export default {
         //判断是否支持图像渲染像素化处理
         viewer.resolutionScale = window.devicePixelRatio;
       }
+      // 移除双击事件
+      viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(
+        Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK
+      );
       //开启抗锯齿
       viewer.scene.fxaa = true;
       viewer.scene.postProcessStages.fxaa.enabled = true;
@@ -705,98 +709,6 @@ export default {
     // 注册cesium事件
     registerOnclickEvent() {
       if (viewer) {
-        // // 注册右键事件
-        // handler.setInputAction((movement) => {
-        //   // If a feature was previously highlighted, undo the highlight
-        //   if (Cesium.defined(rightClickHighted.feature)) {
-        //     rightClickHighted.feature.color = rightClickHighted.originalColor;
-        //     rightClickHighted.feature = undefined;
-        //   }
-
-        //   // Pick a new feature
-        //   let pickedFeature = viewer.scene.pick(movement.position);
-        //   if (!Cesium.defined(pickedFeature)) {
-        //     // this.isLayerDialogVisible = false;
-        //     return;
-        //   }
-
-        //   //undo the moveFeature Highlight the feature
-        //   // moveHighlighted.feature.color = moveHighlighted.originalColor;
-        //   // moveHighlighted.feature = undefined;
-
-        //   rightClickHighted.feature = pickedFeature;
-        //   Cesium.Color.clone(
-        //     pickedFeature.color,
-        //     rightClickHighted.originalColor
-        //   );
-        //   pickedFeature.color = Cesium.Color.BLUE;
-        //   // let pickedFeature = viewer.scene.pick(movement.position);
-        //   if (Cesium.defined(pickedFeature)) {
-        //     if (pickedFeature instanceof Cesium.Cesium3DTileFeature) {
-        //       if (
-        //         pickedFeature.tileset._url ===
-        //         "3DTiles/drill_3dtiles/tileset.json"
-        //       ) {
-        //         let cartesian = viewer.scene.pickPosition(movement.position);
-        //         let cartographic = Cesium.Cartographic.fromCartesian(cartesian);
-        //         const holecode = pickedFeature.getProperty("钻孔编码");
-        //         console.log(
-        //           pickedFeature.getProperty("孔口标高"),
-        //           this.getMdlDegreeCenter(cartographic)[0]
-        //         );
-        //         let mhDistance =
-        //           pickedFeature.getProperty("孔口标高") -
-        //           this.getMdlDegreeCenter(cartographic)[0];
-        //         console.log(mhDistance);
-        //         this.$http
-        //           .get("/getHoleLayerInfoByHoleCode", {
-        //             params: {
-        //               holecode: holecode,
-        //             },
-        //           })
-        //           .then((res) => {
-        //             this.drillName = holecode;
-        //             this.layerInfo = res.data.data;
-        //             this.isLayerDialogVisible = true;
-        //           });
-        //       } else if (
-        //         pickedFeature.tileset._url ===
-        //         "3DTiles/model_3dtiles/tileset.json"
-        //       ) {
-        //         this.tableCommonData = [];
-        //         let titles = "地层编码";
-        //         this.tableTitleTheme = "钻孔分层信息"; //设置表格title sisi
-        //         let resStr = pickedFeature.getProperty("地层编码");
-        //         let obj = {
-        //           label: titles,
-        //           value: resStr,
-        //         };
-        //         this.tableCommonData.push(obj);
-        //         this.isCommonVisible = true;
-        //       } else {
-        //         this.tableCommonData = [];
-        //         let propertyList = pickedFeature.getPropertyNames();
-        //         for (let i = 0; i < propertyList.length; i++) {
-        //           let obj = {
-        //             label: propertyList[i],
-        //             value: pickedFeature.getProperty(propertyList[i]),
-        //           };
-        //           this.tableTitleTheme = "地层信息"; //设置表格title sisi
-        //           this.tableCommonData.push(obj);
-        //           this.isCommonVisible = true;
-        //           console.log("右键查询");
-        //         }
-        //       }
-        //     } else {
-        //       Notification({
-        //         title: "提示",
-        //         message: "该3dtiles没有属性",
-        //         duration: "2000",
-        //       });
-        //     }
-        //   }
-        // }, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
-
         let handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
         // 注册左键事件
         handler.setInputAction((movement) => {
@@ -805,7 +717,6 @@ export default {
             this.setFeatureColor(moveHighlighted, undefined);
             if (this.get3DTilesFeature(movement) > -1) return;
             let pick = viewer.scene.pick(movement.position);
-
             this.tableCommonData = [];
             this.editableTabsValue = "1";
             this.isLayerDialogVisible = false;
@@ -834,7 +745,6 @@ export default {
                     }
                   }
                   let count = this.tableCommonData.length;
-
                   this.tableCommonData.push({
                     title: pick.id,
                     name: ++count + "",
@@ -843,7 +753,8 @@ export default {
                   });
                   this.isCommonVisible = true;
                   this.isLayerDialogVisible = false;
-                });
+                })
+                .catch((err) => {});
             }
 
             // 获取图层信息
@@ -863,7 +774,6 @@ export default {
                 // 只有显示的并且是geoserver和arcgisserver的可以用
                 // 确定哪个图层可查
                 let tempImageryProvider = this.getQueryImageryProvider();
-                console.log(tempImageryProvider);
                 if (!tempImageryProvider.length) return;
                 for (const tmpImgProvider of tempImageryProvider) {
                   if (tmpImgProvider.ready) {
@@ -931,7 +841,6 @@ export default {
               }
             }
           }, 200);
-          console.log("左键查询");
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
         //注册移动事件
@@ -1164,8 +1073,6 @@ export default {
           this.tableCommonData = [];
           let tmp = [];
           let propertyList = pickedFeature.getPropertyNames();
-          console.log(propertyList);
-          console.log(pickedFeature.getProperty("boundarytype"));
           for (let i = 0; i < propertyList.length; i++) {
             let chineseFiled = attributeCompare[flagInfo].get(propertyList[i]);
             if (chineseFiled) {
@@ -1419,7 +1326,25 @@ export default {
 
           break;
         case 7:
-          new DrawUtils(viewer).measureLine();
+          new DrawUtils(viewer).measureLine((result) => {
+            this.tableCommonData = [];
+            let obj = [
+              {
+                label: "距离（米）",
+                value: result,
+              },
+            ];
+            let count = this.tableCommonData.length;
+            this.editableTabsValue = "1";
+            this.tableCommonData.push({
+              title: "测量距离",
+              name: ++count + "",
+              tableData: obj,
+              tableType: 1,
+            });
+            this.isCommonVisible = true;
+            this.isLayerDialogVisible = false;
+          });
           break;
         case 9:
           new DrawUtils(viewer).removeMeasureEntites();
@@ -1774,11 +1699,11 @@ export default {
   mounted() {
     this.initCesium(); // cesim初始化必须放在mounted里面
     // 加载三维地形
-    // new TerrainLoader().loadLocalTerrain(
-    //   "http://192.10.3.237:81/tsyTerrain/",
-    //   viewer,
-    //   true
-    // );
+    new TerrainLoader().loadLocalTerrain(
+      "http://192.10.3.237:81/tsyTerrain/",
+      viewer,
+      true
+    );
     this.registerOnclickEvent();
     eventVue.$emit("sendCesiumViewer", viewer);
     // this.getGeoServerWmsBoundingBox("http://192.10.3.237/geoserver/crcc-dev/wms");
