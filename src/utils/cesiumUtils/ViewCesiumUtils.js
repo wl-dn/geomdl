@@ -3,8 +3,8 @@
  * @Author: wenlong
  * @version: 
  * @Date: 2021-08-19 11:05:19
- * @LastEditors: wenlong
- * @LastEditTime: 2021-08-23 14:54:33
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-12-27 09:08:40
  */
 import * as Cesium from "cesium"
 export default class ViewCesiumUtils {
@@ -117,7 +117,7 @@ export default class ViewCesiumUtils {
         if (listData.children) {
             for (let i = 0; i < listData.children.length; i++) {
                 const listItem = listData.children[i];
-                this.createTreeLayerData(listItem, layerData);
+                this.getTreeLayerData(listItem, layerData);
             }
         } else {
             const dataItem = JSON.parse(JSON.stringify(listData))
