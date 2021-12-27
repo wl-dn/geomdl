@@ -61,7 +61,7 @@ export default {
         pitch: 0,
       },
       isActiveSpan: true,
-      slideValue: 0.7,
+      slideValue: 1,
       imageryAlpha: 1,
     };
   },

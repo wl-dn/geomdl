@@ -3,8 +3,8 @@
  * @Author: wenlong
  * @version: 
  * @Date: 2021-08-23 14:46:59
- * @LastEditors: wenlong
- * @LastEditTime: 2021-08-24 21:28:38
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2021-12-27 11:16:21
  */
 import * as Cesium from "cesium"
 export default class DrawUtils {
@@ -21,7 +21,7 @@ export default class DrawUtils {
     drawPointEntity(position, config) {
         config = config || {};
         let pointGeometry = this._viewer.entities.add({
-            name:"绘制点",
+            name: "绘制点",
             position: position,
             point: {
                 color: Cesium.Color.SKYBLUE,
@@ -46,7 +46,7 @@ export default class DrawUtils {
         if (positionLine.length < 1) return;
         config = config || {};
         let polylineGeometry = this._viewer.entities.add({
-            name:"绘制线",
+            name: "绘制线",
             polyline: {
                 positions: positionLine,
                 width: config.width ? config.width : 5.0,
@@ -116,17 +116,17 @@ export default class DrawUtils {
         }
     }
 
-    getEntitiesByName(name){
+    getEntitiesByName(name) {
         let entitiesCollect = this._viewer.entities.values;
         let tempEntites = [];
-        for(let i=0;i<entitiesCollect.length;i++) {
-            if(entitiesCollect[i].name === name) {
+        for (let i = 0; i < entitiesCollect.length; i++) {
+            if (entitiesCollect[i].name === name) {
                 tempEntites.push(entitiesCollect[i])
             }
         }
         return tempEntites
     }
- 
+
 
 
 
@@ -300,12 +300,13 @@ export default class DrawUtils {
     }
 
     // 测量距离
-    measureLine() {
+    measureLine(callback) {
         let handler = new Cesium.ScreenSpaceEventHandler(this._viewer.scene.canvas);
         let activeShapePoints = [];
         let activeShape;
         let floatingPoint;
         let distance = 0;
+        let returnDistance = 0;
         handler.setInputAction((movement) => {
             let earthPosition = this._viewer.scene.pickPosition(movement.position);
             if (Cesium.defined(earthPosition)) {
@@ -318,28 +319,30 @@ export default class DrawUtils {
                     activeShape = this.drawPolyLineEntity(dynamicPositions);  // 绘制线
                 }
                 activeShapePoints.push(earthPosition);
-                // this.drawPointEntity(earthPosition);
+                this.drawPointEntity(earthPosition);
                 let textDisance = distance + "米";
-                this._viewer.entities.add({
-                    name: '绘制点',
-                    position: activeShapePoints[activeShapePoints.length - 1],
-                    point: {
-                        pixelSize: 5,
-                        color: Cesium.Color.RED,
-                        outlineColor: Cesium.Color.WHITE,
-                        outlineWidth: 2,
-                        heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
-                    },
-                    label: {
-                        text: textDisance,
-                        font: '18px sans-serif',
-                        fillColor: Cesium.Color.GOLD,
-                        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
-                        outlineWidth: 2,
-                        verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
-                        pixelOffset: new Cesium.Cartesian2(20, -20),
-                    }
-                });
+                returnDistance = textDisance;
+                // this._viewer.entities.add({
+                //     name: '绘制点',
+                //     position: activeShapePoints[activeShapePoints.length - 1],
+                //     point: {
+                //         pixelSize: 5,
+                //         color: Cesium.Color.RED,
+                //         outlineColor: Cesium.Color.WHITE,
+                //         outlineWidth: 2,
+                //         heightReference: Cesium.HeightReference.CLAMP_TO_GROUND,
+                //     },
+                //     label: {
+                //         text: textDisance,
+                //         font: '18px sans-serif',
+                //         fillColor: Cesium.Color.GOLD,
+                //         style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                //         outlineWidth: 2,
+                //         verticalOrigin: Cesium.VerticalOrigin.CENTER,
+                //         horizontalOrigin: Cesium.HorizontalOrigin.LEFT,
+                //         pixelOffset: new Cesium.Cartesian2(20, -20),
+                //     }
+                // });
             }
         }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
         handler.setInputAction((movement) => {
@@ -359,7 +362,7 @@ export default class DrawUtils {
             handler = undefined;
             activeShapePoints.pop();
             this.drawPolyLineEntity(activeShapePoints);
-            console.log(this._viewer.entities);
+            callback(returnDistance)
             // this._viewer.entities.remove(floatingPoint);
             // this._viewer.entities.remove(activeShape);
             floatingPoint = undefined;
@@ -416,16 +419,15 @@ export default class DrawUtils {
     // 删除测量用的entity
     removeMeasureEntites() {
         // 删除点
-        debugger
         let pointEntites = this.getEntitiesByName('绘制点');
-        for(let i= 0;i<pointEntites.length;i++) {
+        for (let i = 0; i < pointEntites.length; i++) {
             this._viewer.entities.remove(pointEntites[i])
         }
-         // 删除点
-         let lineEntites = this.getEntitiesByName('绘制线');
-         for(let i= 0;i<lineEntites.length;i++) {
-             this._viewer.entities.remove(lineEntites[i])
-         }
+        // 删除点
+        let lineEntites = this.getEntitiesByName('绘制线');
+        for (let i = 0; i < lineEntites.length; i++) {
+            this._viewer.entities.remove(lineEntites[i])
+        }
     }
     _terminateShape() {
         activeShapePoints.pop();
