@@ -544,7 +544,7 @@ export default {
       this.formatScene();
       let gltfLoader = new GLTFLoader();
       let dracoLoader = new DRACOLoader();
-      dracoLoader.setDecoderPath("draco/gltf/");
+      dracoLoader.setDecoderPath("data/draco/gltf/");
       dracoLoader.setDecoderConfig({ type: "js" });
       gltfLoader.setDRACOLoader(dracoLoader);
       if (modelNameArr.length === 0) return;
@@ -1338,7 +1338,7 @@ export default {
     this.objGeoLevelList = tempList;
 
     //this.loadObjMdl(res.path, res.objNameList);
-    this.loadGltfMdl("dracoGltf/", this.objNameList);
+    this.loadGltfMdl("data/dracoGltf/", this.objNameList);
   },
   created() {},
   beforeDestroy() {

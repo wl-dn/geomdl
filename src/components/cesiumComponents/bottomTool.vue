@@ -1,23 +1,16 @@
 <template>
   <div class="bottomTool">
     <div class="map-coordinates">
-      <span
-        id="cd_label"
-        v-show="isActiveSpan"
-        >暂无坐标信息</span
-      >
-      <span
-        id="cd_label"
-        v-show="!isActiveSpan"
-      >
+      <span id="cd_label" v-show="isActiveSpan">暂无坐标信息</span>
+      <span id="cd_label" v-show="!isActiveSpan">
         经度：{{ commonCesiumInfos.lng }} 纬度：{{
           commonCesiumInfos.lat
         }}
-        海拔高度：{{ commonCesiumInfos.height }}米
-        视点高度：{{
+        海拔高度：{{ commonCesiumInfos.height }}米 视点高度：{{
           commonCesiumInfos.ViewpointsHeight
-        }}米 方向：{{ commonCesiumInfos.heading }}度
-         俯仰角：{{ commonCesiumInfos.pitch }}度
+        }}米 方向：{{ commonCesiumInfos.heading }}度 俯仰角：{{
+          commonCesiumInfos.pitch
+        }}度
       </span>
     </div>
     <div class="slidebox">
@@ -48,8 +41,12 @@
 import * as Cesium from "cesium";
 import eventVue from "../../assets/js/eventVue";
 export default {
-  props: ["viewer"],
-
+  props: ["viewer", "slideFValue"],
+  watch: {
+    slideFValue(val) {
+      this.slideValue = this.slideFValue;
+    },
+  },
   data() {
     return {
       commonCesiumInfos: {
@@ -61,7 +58,7 @@ export default {
         pitch: 0,
       },
       isActiveSpan: true,
-      slideValue: 1,
+      slideValue: 0.6,
       imageryAlpha: 1,
     };
   },
@@ -181,10 +178,10 @@ export default {
   font-size: 13px;
   z-index: 1;
 }
-.map-coordinates{
+.map-coordinates {
   width: 50%;
 }
-#cd_label{
+#cd_label {
   /* font-size: 13px; */
   text-align: center;
   font-family: 微软雅黑;

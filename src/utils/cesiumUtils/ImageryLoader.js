@@ -34,8 +34,8 @@ export default class ImageryLoader {
             } else if (layerName.indexOf("hydro") >= 0) {
                 isChecked ? ViewCesiumUtils.resetView(
                     viewer,
-                    113.805972,
-                    23.664014,
+                    113.444517,
+                    28.3255097,
                     220000.0
                 ) : 1;
             }
@@ -75,8 +75,8 @@ export default class ImageryLoader {
         } else if (layerName.indexOf("hydro") >= 0) {
             ViewCesiumUtils.resetView(
                 viewer,
-                113.805972,
-                23.664014,
+                113.444517,
+                28.3255097,
                 220000.0
             );
         }

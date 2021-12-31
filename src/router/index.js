@@ -79,10 +79,10 @@ const routes = [
 ]
 
 const router = new VueRouter({
-  mode: 'hash',
-  base: process.env.BASE_URL,
-  // mode: 'history',
-  // base: "/crccgeo/",
+  // mode: 'hash',
+  // base: process.env.BASE_URL,
+  mode: 'history',
+  base: "/crccgeo/",
   routes
 })
 

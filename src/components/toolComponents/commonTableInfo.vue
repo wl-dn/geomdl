@@ -67,6 +67,25 @@
               </el-table-column>
             </el-table>
           </div>
+          <div class="content_box-4" v-else-if="item.tableType === 4">
+            <el-table
+              :data="item.tableData"
+              border
+              style="width: 100%"
+              height="350px"
+            >
+              <el-table-column prop="name" label="标记点"> </el-table-column>
+              <el-table-column prop="longitude" label="经度（度）">
+              </el-table-column>
+              <el-table-column prop="latitude" label="纬度（度）">
+              </el-table-column>
+              <el-table-column prop="height" label="高程（米）">
+              </el-table-column>
+              <el-table-column prop="distance" label="距离（米）">
+              </el-table-column>
+              <!-- <el-table-column prop="pitch" label="俯仰角"> </el-table-column> -->
+            </el-table>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -204,6 +223,11 @@ export default {
   overflow-y: auto;
 }
 .commonTableBox .content_box_3 {
+  width: 100%;
+  height: 350px;
+  overflow-y: auto;
+}
+.commonTableBox .content_box-4 {
   width: 100%;
   height: 350px;
   overflow-y: auto;

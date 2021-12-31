@@ -98,6 +98,7 @@
     <bottomTool
       @sendAlphaInfo="receptAlphaInfo"
       @sendImageryAlpha="receptImageryAlpha"
+      :slideFValue="slideFValue"
     ></bottomTool>
   </div>
 </template>
@@ -131,6 +132,7 @@ import Viewer from "cesium/Source/Widgets/Viewer/Viewer";
 
 import proj4 from "proj4";
 import DrawUtils from "../../utils/cesiumUtils/DrawUtils";
+import ViewCesiumUtils from "../../utils/cesiumUtils/ViewCesiumUtils";
 
 let tileSetList = [];
 let viewer = null;
@@ -224,6 +226,7 @@ export default {
       removeListener: undefined,
 
       editableTabsValue: "1",
+      slideFValue: 0,
 
       // 列表proj的坐标事件
       EPSG4326: "+proj=longlat +datum=WGS84 +no_defs",
@@ -724,8 +727,9 @@ export default {
             let count = 0;
             //获取钻孔信息
             if (Cesium.defined(pick) && Cesium.defined(pick.id)) {
+              let url = window.baseURL + "/getHoleInfoByHoleCode";
               this.$http
-                .get("/getHoleInfoByHoleCode", {
+                .get(url, {
                   params: {
                     holeCode: pick.id,
                   },
@@ -1017,10 +1021,10 @@ export default {
           const holecode = pickedFeature.getProperty("钻孔编码");
           const mhDistance =
             pickedFeature.getProperty("孔口标高") -
-            his.getMdlDegreeCenter(cartographic)[0];
-
+            this.getMdlDegreeCenter(cartographic)[0];
+          let url = window.baseURL + "/getHoleLayerInfoByHoleCode";
           this.$http
-            .get("getHoleLayerInfoByHoleCode", {
+            .get(url, {
               params: {
                 holecode: holecode,
               },
@@ -1195,95 +1199,68 @@ export default {
     // 下面是接收来自其他组件的通信
     // 接收二维服务
     recept2dViewInfo(data) {
-      if (data.nodeData.serviceType === "wms") {
-        if (data.nodeData.children) {
-          for (let i = 0; i < data.nodeData.children.length; i++) {
-            ImageryLoader.loadWmsLayer(
-              viewer,
-              data.nodeData.children[i].url,
-              data.nodeData.children[i].layers,
-              data.nodeData.children[i].label,
-              data.isChecked
-            );
-            this.activeImageryNameSet.add(data.nodeData.children[i].layers);
-          }
-        } else {
+      let nodeDataList = [];
+      ViewCesiumUtils.getTreeLayerData(data.nodeData, nodeDataList); // 获取所有叶子节点
+      for (let i = 0; i < nodeDataList.length; i++) {
+        if (nodeDataList[i].serviceType === "wms") {
           ImageryLoader.loadWmsLayer(
             viewer,
-            data.nodeData.url,
-            data.nodeData.layers,
-            data.nodeData.label,
+            nodeDataList[i].url,
+            nodeDataList[i].layers,
+            nodeDataList[i].label,
+            data.isChecked
+          );
+          this.activeImageryNameSet.add(nodeDataList[i].layers);
+        } else if (data.nodeData.serviceType === "wfs") {
+          this.loadWfsLayer(
+            nodeDataList[i].url,
+            nodeDataList[i].name,
+            data.isChecked
+          );
+        } else if (nodeDataList[i].serviceType === "mapserver") {
+          ImageryLoader.loadArcgisMapServerLayer(
+            viewer,
+            nodeDataList[i].url,
+            nodeDataList[i].layers,
+            nodeDataList[i].label,
             data.isChecked
           );
           this.activeImageryNameSet.add(data.nodeData.layers);
+        } else if (nodeDataList[i].serviceType === "kml") {
+          ImageryLoader.loadKmlLayer(
+            viewer,
+            nodeDataList[i].url,
+            nodeDataList[i].name,
+            data.isChecked
+          );
+        } else if (nodeDataList[i].serviceType === "天地图") {
+          ImageryLoader.loadTDMapLayer(
+            viewer,
+            nodeDataList[i].url,
+            nodeDataList[i].layers,
+            data.isChecked
+          );
+        } else if (nodeDataList[i].serviceType === "billboards") {
+          console.log("加载billboards");
+          this.loadHoleLayer(
+            nodeDataList[i].url,
+            nodeDataList[i].name,
+            data.isChecked
+          );
+        } else if (nodeDataList[i].serviceType === "地形服务") {
+          new TerrainLoader().loadLocalTerrain(
+            nodeDataList[i].url,
+            viewer,
+            data.isChecked
+          );
+        } else if (nodeDataList[i].serviceType === "UrlTemplate") {
+          ImageryLoader.loadUrlTemlpateImageryLayer(
+            viewer,
+            nodeDataList[i].url,
+            nodeDataList[i].layers,
+            data.isChecked
+          );
         }
-      } else if (data.nodeData.serviceType === "Google") {
-        this.loadUTLayer(
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "ESRI") {
-        this.loadESRILayer(
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "OSM") {
-        this.loadOSMLayer(
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "wfs") {
-        this.loadWfsLayer(
-          data.nodeData.url,
-          data.nodeData.name,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "mapserver") {
-        ImageryLoader.loadArcgisMapServerLayer(
-          viewer,
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.nodeData.label,
-          data.isChecked
-        );
-        this.activeImageryNameSet.add(data.nodeData.layers);
-      } else if (data.nodeData.serviceType === "kml") {
-        ImageryLoader.loadKmlLayer(
-          viewer,
-          data.nodeData.url,
-          data.nodeData.name,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "天地图") {
-        ImageryLoader.loadTDMapLayer(
-          viewer,
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "billboards") {
-        console.log("加载billboards");
-        this.loadHoleLayer(
-          data.nodeData.url,
-          data.nodeData.name,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "地形服务") {
-        new TerrainLoader().loadLocalTerrain(
-          data.nodeData.url,
-          viewer,
-          data.isChecked
-        );
-      } else if (data.nodeData.serviceType === "UrlTemplate") {
-        ImageryLoader.loadUrlTemlpateImageryLayer(
-          viewer,
-          data.nodeData.url,
-          data.nodeData.layers,
-          data.isChecked
-        );
       }
     },
     // 接收三维服务
@@ -1326,24 +1303,47 @@ export default {
 
           break;
         case 7:
+          this.slideFValue = 1;
           new DrawUtils(viewer).measureLine((result) => {
+            let tempCommonData = [];
             this.tableCommonData = [];
-            let obj = [
-              {
-                label: "距离（米）",
-                value: result,
-              },
-            ];
+            for (let i = 0; i < result.length; i++) {
+              let cartographic = Cesium.Cartographic.fromCartesian(
+                result[i].point
+              );
+
+              let degree = this.getMdlDegreeCenter(cartographic);
+              // let pitch =
+              //   i === 0
+              //     ? 0
+              //     : ViewCesiumUtils.getPicth(
+              //         result[i - 1].point,
+              //         result[i].point
+              //       );
+              let obj = {
+                name: `点${i + 1}`,
+                longitude: degree[1],
+                latitude: degree[2],
+                height: degree[0],
+                distance:
+                  i === 0
+                    ? result[i].distance
+                    : result[i].distance - result[i - 1].distance,
+                // pitch: pitch,
+              };
+              tempCommonData.push(obj);
+            }
             let count = this.tableCommonData.length;
             this.editableTabsValue = "1";
             this.tableCommonData.push({
               title: "测量距离",
               name: ++count + "",
-              tableData: obj,
-              tableType: 1,
+              tableData: tempCommonData,
+              tableType: 4,
             });
             this.isCommonVisible = true;
             this.isLayerDialogVisible = false;
+            this.slideFValue = 0.6;
           });
           break;
         case 9:
@@ -1477,7 +1477,6 @@ export default {
         item.label
       );
       if (flagObj.isChecked) {
-        console.log("已显示过");
         this.holeBillbordsLayer.remove(flagObj.obj);
       } else {
         let lon = Number(item.longitude);
